@@ -72,6 +72,7 @@ export default function ProjectWorkspace() {
   // Advanced Settings State
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [resolution, setResolution] = useState("1K");
+  const [is8KMode, setIs8KMode] = useState(false);
   const [numImages, setNumImages] = useState(1);
   const [model, setModel] = useState("google/nano-banana-pro");
   
@@ -392,7 +393,7 @@ export default function ProjectWorkspace() {
       let trimmed = p.trim();
       
       // Add 8K keywords if selected
-      if (resolution === "8K") {
+      if (is8KMode) {
         const k8Keywords = "Volumetric lighting - Sharp focus on the face - highly detailed eyes - 8K - clear facial features";
         if (!trimmed.toLowerCase().includes("8k")) {
           trimmed = `${trimmed}, ${k8Keywords}`;
@@ -543,16 +544,12 @@ export default function ProjectWorkspace() {
     const files = e.target.files;
     if (files && files.length > 0) {
       try {
-        const newImages: string[] = [];
-        for (let i = 0; i < files.length; i++) {
-          const compressedBase64 = await compressImage(files[i]);
-          newImages.push(compressedBase64);
-        }
-        setImageFiles(prev => [...prev, ...newImages].slice(0, 14));
+        const compressedBase64 = await compressImage(files[0]);
+        setImageFiles([compressedBase64]);
         setError(null);
       } catch (err) {
         console.error("Error compressing image:", err);
-        setError("حدث خطأ أثناء معالجة الصور.");
+        setError("حدث خطأ أثناء معالجة الصورة.");
       }
     }
   };
@@ -600,7 +597,7 @@ export default function ProjectWorkspace() {
       let trimmed = p.trim();
       
       // Add 8K keywords if selected
-      if (resolution === "8K") {
+      if (is8KMode) {
         const k8Keywords = "Volumetric lighting - Sharp focus on the face - highly detailed eyes - 8K - clear facial features";
         if (!trimmed.toLowerCase().includes("8k")) {
           trimmed = `${trimmed}, ${k8Keywords}`;
@@ -1198,19 +1195,19 @@ export default function ProjectWorkspace() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                   {/* 8K Special Box */}
                   <div 
-                    onClick={() => setResolution(resolution === "8K" ? "1K" : "8K")}
+                    onClick={() => setIs8KMode(!is8KMode)}
                     className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center gap-2 group ${
-                      resolution === "8K" 
+                      is8KMode 
                       ? "bg-blue-600/20 border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]" 
                       : "bg-black/60 border-blue-500/10 hover:border-blue-500/40"
                     }`}
                   >
-                    <div className={`p-2 rounded-full transition-colors ${resolution === "8K" ? "bg-blue-500 text-white" : "bg-blue-500/10 text-blue-500/50 group-hover:text-blue-400"}`}>
+                    <div className={`p-2 rounded-full transition-colors ${is8KMode ? "bg-blue-500 text-white" : "bg-blue-500/10 text-blue-500/50 group-hover:text-blue-400"}`}>
                       <Zap className="w-5 h-5" />
                     </div>
                     <div className="text-center">
-                      <div className={`text-xs font-bold ${resolution === "8K" ? "text-white" : "text-gray-400"}`}>وضع 8K</div>
-                      <div className={`text-[10px] ${resolution === "8K" ? "text-blue-200" : "text-gray-500"}`}>دقة سينمائية</div>
+                      <div className={`text-xs font-bold ${is8KMode ? "text-white" : "text-gray-400"}`}>وضع 8K</div>
+                      <div className={`text-[10px] ${is8KMode ? "text-blue-200" : "text-gray-500"}`}>دقة سينمائية</div>
                     </div>
                   </div>
 
@@ -1254,10 +1251,9 @@ export default function ProjectWorkspace() {
                       الدقة (Resolution)
                     </label>
                     <select
-                      value={resolution === "8K" ? "4K" : resolution}
-                      disabled={resolution === "8K"}
+                      value={resolution}
                       onChange={(e) => setResolution(e.target.value)}
-                      className={`w-full px-4 py-2.5 bg-black/60 border border-blue-500/20 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none ${resolution === "8K" ? "opacity-50 cursor-not-allowed" : ""}`}
+                      className="w-full px-4 py-2.5 bg-black/60 border border-blue-500/20 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
                     >
                       <option value="1K">عادي (1K)</option>
                       <option value="2K">عالي (2K)</option>
@@ -1287,37 +1283,33 @@ export default function ProjectWorkspace() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-gray-200 ml-1">
-                    صور مرجعية (حتى 14 صورة)
+                    صورة مرجعية (اختياري)
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {imageFiles.map((img, idx) => (
-                      <div key={idx} className="relative group aspect-square">
-                        <img src={img} alt={`مرجع ${idx + 1}`} className="h-full w-full object-cover rounded-xl border border-blue-500/30 shadow-md" />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(idx)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-transform hover:scale-110 shadow-lg z-10"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                    {imageFiles.length < 14 && (
-                      <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex flex-col justify-center items-center border-2 border-blue-500/20 border-dashed rounded-xl hover:border-blue-500 hover:bg-blue-900/10 cursor-pointer transition-all group bg-black/40 aspect-square"
+                  {imageFiles.length > 0 ? (
+                    <div className="relative inline-block group w-full">
+                      <img src={imageFiles[0]} alt="معاينة" className="h-32 w-full object-cover rounded-2xl border border-blue-500/30 shadow-xl" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(0)}
+                        className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white p-2 rounded-full backdrop-blur-md transition-colors shadow-lg"
                       >
-                        <Plus className="h-6 w-6 text-blue-500/50 group-hover:text-blue-400 transition-colors" />
-                        <span className="text-[10px] text-gray-400 mt-1">إضافة</span>
-                      </div>
-                    )}
-                  </div>
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-blue-500/20 border-dashed rounded-2xl hover:border-blue-500 hover:bg-blue-900/10 cursor-pointer transition-all group bg-black/40"
+                    >
+                      <Upload className="h-8 w-8 text-blue-500/50 group-hover:text-blue-400 transition-colors mb-2" />
+                      <span className="text-sm text-gray-400 group-hover:text-gray-300">اضغط لرفع صورة مرجعية</span>
+                    </div>
+                  )}
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleImageUpload}
                     accept="image/*"
-                    multiple
                     className="hidden"
                   />
                 </div>
