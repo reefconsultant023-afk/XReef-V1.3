@@ -249,10 +249,6 @@ export default function SupportPage() {
                       </div>
                       <p className="text-gray-400 text-sm mb-4 whitespace-pre-wrap">{ticket.description}</p>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Clock size={12} />
-                          {new Date(ticket.createdAt).toLocaleString('ar-EG')}
-                        </span>
                         {ticket.userName && (
                           <span className="flex items-center gap-1 text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md">
                             <UserIcon size={12} />
