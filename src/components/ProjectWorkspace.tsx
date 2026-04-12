@@ -61,7 +61,7 @@ export default function ProjectWorkspace() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
-  const [imageFile, setImageFile] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<string[]>([]);
   const [styleImageFile, setStyleImageFile] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -520,22 +520,25 @@ export default function ProjectWorkspace() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
       try {
-        // Compress the image before saving it to state
-        const compressedBase64 = await compressImage(file);
-        setImageFile(compressedBase64);
+        const newImages: string[] = [];
+        for (let i = 0; i < files.length; i++) {
+          const compressedBase64 = await compressImage(files[i]);
+          newImages.push(compressedBase64);
+        }
+        setImageFiles(prev => [...prev, ...newImages].slice(0, 14));
         setError(null);
       } catch (err) {
         console.error("Error compressing image:", err);
-        setError("حدث خطأ أثناء معالجة الصورة.");
+        setError("حدث خطأ أثناء معالجة الصور.");
       }
     }
   };
 
-  const removeImage = () => {
-    setImageFile(null);
+  const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -587,7 +590,7 @@ export default function ProjectWorkspace() {
         },
         body: JSON.stringify({ 
           prompt: formatPrompt(prompt), 
-          image: imageFile,
+          images: imageFiles,
           styleImage: styleImageFile,
           aspectRatio,
           resolution,
@@ -724,7 +727,7 @@ export default function ProjectWorkspace() {
   };
 
   const handleUseAsInput = (url: string) => {
-    setImageFile(url);
+    setImageFiles(prev => [...prev, url].slice(0, 14));
     setSelectedImage(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1218,10 +1221,9 @@ export default function ProjectWorkspace() {
                       onChange={(e) => setNumImages(Number(e.target.value))}
                       className="w-full px-4 py-2.5 bg-black/60 border border-blue-500/20 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
                     >
-                      <option value={1}>1</option>
-                      <option value={2}>2</option>
-                      <option value={3}>3</option>
-                      <option value={4}>4</option>
+                      {[...Array(14)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -1231,41 +1233,37 @@ export default function ProjectWorkspace() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-gray-200 ml-1">
-                    صورة مرجعية (اختياري)
+                    صور مرجعية (حتى 14 صورة)
                   </label>
-                  {imageFile ? (
-                    <div className="relative inline-block group w-full">
-                      <img src={imageFile} alt="معاينة الصورة المرفوعة" className="h-32 w-full object-cover rounded-2xl border border-blue-500/30 shadow-xl" />
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-transform hover:scale-110 shadow-lg"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex justify-center px-6 pt-5 pb-6 border-2 border-blue-500/20 border-dashed rounded-3xl hover:border-blue-500 hover:bg-blue-900/10 cursor-pointer transition-all group bg-black/40 h-32 items-center"
-                    >
-                      <div className="space-y-2 text-center">
-                        <div className="w-10 h-10 mx-auto bg-blue-500/10 rounded-full flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-                          <Upload className="h-5 w-5 text-blue-500/50 group-hover:text-blue-400 transition-colors" />
-                        </div>
-                        <div className="flex text-xs text-gray-300 justify-center">
-                          <span className="relative cursor-pointer font-medium text-blue-400 hover:text-blue-300">
-                            صورة مرجعية
-                          </span>
-                        </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {imageFiles.map((img, idx) => (
+                      <div key={idx} className="relative group aspect-square">
+                        <img src={img} alt={`مرجع ${idx + 1}`} className="h-full w-full object-cover rounded-xl border border-blue-500/30 shadow-md" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(idx)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-transform hover:scale-110 shadow-lg z-10"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                       </div>
-                    </div>
-                  )}
+                    ))}
+                    {imageFiles.length < 14 && (
+                      <div 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex flex-col justify-center items-center border-2 border-blue-500/20 border-dashed rounded-xl hover:border-blue-500 hover:bg-blue-900/10 cursor-pointer transition-all group bg-black/40 aspect-square"
+                      >
+                        <Plus className="h-6 w-6 text-blue-500/50 group-hover:text-blue-400 transition-colors" />
+                        <span className="text-[10px] text-gray-400 mt-1">إضافة</span>
+                      </div>
+                    )}
+                  </div>
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleImageUpload}
                     accept="image/*"
+                    multiple
                     className="hidden"
                   />
                 </div>
