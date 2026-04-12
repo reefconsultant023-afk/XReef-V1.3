@@ -12,7 +12,7 @@ async function startServer() {
   // API routes FIRST
   app.post("/api/generate", async (req, res) => {
     try {
-      const { prompt, image, images, aspectRatio, resolution, negativePrompt, numImages = 1, model = "google/nano-banana-pro" } = req.body;
+      const { prompt, image, images, aspectRatio, resolution, negativePrompt } = req.body;
       if (!prompt) {
         return res.status(400).json({ error: "Prompt is required" });
       }
@@ -32,68 +32,26 @@ async function startServer() {
       }
 
       const input: any = { 
-        prompt: finalPrompt
+        prompt: finalPrompt,
+        safety_filter_level: "block_only_high",
+        allow_fallback_model: true
       };
 
       const inputImages = images && Array.isArray(images) && images.length > 0 ? images : (image ? [image] : null);
 
-      if (model === "black-forest-labs/flux-2-pro") {
-        input.safety_tolerance = 2;
-        if (aspectRatio) {
-          input.aspect_ratio = aspectRatio;
-        }
-        if (resolution) {
-          if (resolution === "1K") input.resolution = "1 MP";
-          else if (resolution === "2K") input.resolution = "2 MP";
-          else if (resolution === "4K" || resolution === "8K") input.resolution = "4 MP";
-          else input.resolution = resolution;
-        }
-        if (inputImages) {
-          input.input_images = inputImages;
-          if (!aspectRatio) {
-            input.aspect_ratio = "match_input_image";
-          }
-        }
-      } else if (model === "sdxl-based/realvisxl-v3-multi-controlnet-lora") {
-        input.prompt = prompt;
-        if (negativePrompt) input.negative_prompt = negativePrompt;
-        if (inputImages && inputImages.length > 0) input.image = inputImages[0];
-        
-        let width = 1024;
-        let height = 1024;
-        if (aspectRatio === "16:9") { width = 1344; height = 768; }
-        else if (aspectRatio === "9:16") { width = 768; height = 1344; }
-        else if (aspectRatio === "4:3") { width = 1152; height = 896; }
-        else if (aspectRatio === "3:4") { width = 896; height = 1152; }
-        
-        input.width = width;
-        input.height = height;
-        input.num_outputs = 1;
-      } else {
-        // Default to nano-banana-pro
-        input.safety_filter_level = "block_only_high";
-        input.allow_fallback_model = true;
-        if (aspectRatio) {
-          input.aspect_ratio = aspectRatio;
-        }
-        if (resolution) {
-          input.resolution = resolution === "8K" ? "4K" : resolution;
-        }
-        if (inputImages) {
-          input.image_input = inputImages;
-        }
+      if (aspectRatio) {
+        input.aspect_ratio = aspectRatio;
+      }
+      if (resolution) {
+        input.resolution = resolution === "8K" ? "4K" : resolution;
+      }
+      if (inputImages) {
+        input.image_input = inputImages;
       }
 
-      const count = Math.min(Math.max(Number(numImages) || 1, 1), 14);
-      
-      let replicateModel = model;
-      if (model === "sdxl-based/realvisxl-v3-multi-controlnet-lora") {
-        replicateModel = "sdxl-based/realvisxl-v3-multi-controlnet-lora:90a4a3604cd637cb9f1a2bdae1cfa9ed869362ca028814cdce310a78e27daade";
-      }
-      
       // Run in parallel to maximize speed
-      const promises = Array.from({ length: count }).map(() => 
-        replicate.run(replicateModel as `${string}/${string}`, { input })
+      const promises = Array.from({ length: 1 }).map(() => 
+        replicate.run("google/nano-banana-pro", { input })
       );
 
       const settledResults = await Promise.allSettled(promises);

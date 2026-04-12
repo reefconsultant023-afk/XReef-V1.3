@@ -62,19 +62,15 @@ export default function ProjectWorkspace() {
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
   const [imageFiles, setImageFiles] = useState<string[]>([]);
-  const [styleImageFile, setStyleImageFile] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const styleFileInputRef = useRef<HTMLInputElement>(null);
 
   // Advanced Settings State
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [resolution, setResolution] = useState("1K");
   const [is8KMode, setIs8KMode] = useState(false);
-  const [numImages, setNumImages] = useState(1);
-  const [model, setModel] = useState("google/nano-banana-pro");
   
   // Fullscreen State
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -561,30 +557,6 @@ export default function ProjectWorkspace() {
     }
   };
 
-  const handleStyleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError("حجم الصورة كبير جداً. الحد الأقصى هو 5 ميجابايت.");
-        return;
-      }
-      try {
-        const compressedDataUrl = await compressImage(file);
-        setStyleImageFile(compressedDataUrl);
-      } catch (err) {
-        console.error("Error compressing image:", err);
-        setError("حدث خطأ أثناء معالجة الصورة.");
-      }
-    }
-  };
-
-  const removeStyleImage = () => {
-    setStyleImageFile(null);
-    if (styleFileInputRef.current) {
-      styleFileInputRef.current.value = '';
-    }
-  };
-
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim()) return;
@@ -617,11 +589,9 @@ export default function ProjectWorkspace() {
         body: JSON.stringify({ 
           prompt: formatPrompt(prompt), 
           images: imageFiles,
-          styleImage: styleImageFile,
           aspectRatio,
           resolution,
-          numImages,
-          model
+          model: "google/nano-banana-pro"
         }),
       });
 
@@ -1192,7 +1162,7 @@ export default function ProjectWorkspace() {
 
               {/* Advanced Settings (Always Visible) */}
               <div className="space-y-5 p-5 bg-black/40 border border-blue-500/20 rounded-3xl shadow-inner">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* 8K Special Box */}
                   <div 
                     onClick={() => setIs8KMode(!is8KMode)}
@@ -1209,22 +1179,6 @@ export default function ProjectWorkspace() {
                       <div className={`text-xs font-bold ${is8KMode ? "text-white" : "text-gray-400"}`}>وضع 8K</div>
                       <div className={`text-[10px] ${is8KMode ? "text-blue-200" : "text-gray-500"}`}>دقة سينمائية</div>
                     </div>
-                  </div>
-
-                  {/* Model Selection */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-medium text-gray-400">
-                      النموذج (Model)
-                    </label>
-                    <select
-                      value={model}
-                      onChange={(e) => setModel(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-black/60 border border-blue-500/20 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
-                    >
-                      <option value="google/nano-banana-pro">Nano Banana Pro</option>
-                      <option value="black-forest-labs/flux-2-pro">Flux 2 Pro</option>
-                      <option value="sdxl-based/realvisxl-v3-multi-controlnet-lora">RealVisXL V3</option>
-                    </select>
                   </div>
 
                   {/* Aspect Ratio */}
@@ -1260,27 +1214,11 @@ export default function ProjectWorkspace() {
                       <option value="4K">فائق (4K)</option>
                     </select>
                   </div>
-
-                  {/* Num Images */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-medium text-gray-400">
-                      عدد الصور
-                    </label>
-                    <select
-                      value={numImages}
-                      onChange={(e) => setNumImages(Number(e.target.value))}
-                      className="w-full px-4 py-2.5 bg-black/60 border border-blue-500/20 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
-                    >
-                      {[...Array(14)].map((_, i) => (
-                        <option key={i + 1} value={i + 1}>{i + 1}</option>
-                      ))}
-                    </select>
-                  </div>
                 </div>
               </div>
 
               {/* Image Upload */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-gray-200 ml-1">
                     صورة مرجعية (اختياري)
@@ -1309,48 +1247,6 @@ export default function ProjectWorkspace() {
                     type="file"
                     ref={fileInputRef}
                     onChange={handleImageUpload}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                </div>
-
-                {/* Style Image Upload */}
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-200 ml-1">
-                    صورة ستايل (اختياري)
-                  </label>
-                  {styleImageFile ? (
-                    <div className="relative inline-block group w-full">
-                      <img src={styleImageFile} alt="معاينة ستايل الصورة" className="h-32 w-full object-cover rounded-2xl border border-purple-500/30 shadow-xl" />
-                      <button
-                        type="button"
-                        onClick={removeStyleImage}
-                        className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-transform hover:scale-110 shadow-lg"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div 
-                      onClick={() => styleFileInputRef.current?.click()}
-                      className="flex justify-center px-6 pt-5 pb-6 border-2 border-purple-500/20 border-dashed rounded-3xl hover:border-purple-500 hover:bg-purple-900/10 cursor-pointer transition-all group bg-black/40 h-32 items-center"
-                    >
-                      <div className="space-y-2 text-center">
-                        <div className="w-10 h-10 mx-auto bg-purple-500/10 rounded-full flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
-                          <Upload className="h-5 w-5 text-purple-500/50 group-hover:text-purple-400 transition-colors" />
-                        </div>
-                        <div className="flex text-xs text-gray-300 justify-center">
-                          <span className="relative cursor-pointer font-medium text-purple-400 hover:text-purple-300">
-                            صورة ستايل
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    ref={styleFileInputRef}
-                    onChange={handleStyleImageUpload}
                     accept="image/*"
                     className="hidden"
                   />
