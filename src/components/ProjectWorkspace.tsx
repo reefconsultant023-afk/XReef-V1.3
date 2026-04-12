@@ -852,7 +852,7 @@ export default function ProjectWorkspace() {
               <Sparkles className="w-12 h-12 text-blue-500" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2 text-center">
-              مرحباً بك في Xreef
+              مرحباً بك في Xreef 1.3
             </h2>
             <p className="text-gray-400 text-center mb-6 text-sm">
               يرجى تسجيل الدخول لحفظ بياناتك
@@ -1106,7 +1106,7 @@ export default function ProjectWorkspace() {
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600 tracking-tight flex items-center justify-center gap-4 drop-shadow-lg mt-12 sm:mt-0">
             <Sparkles className="w-12 h-12 text-blue-500" />
-            إصدار Xreef 1.1
+            Xreef 1.3
           </h1>
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto font-light text-center">
             أطلق العنان لخيالك. قم بتوليد وتعديل الصور باستخدام أحدث تقنيات الذكاء الاصطناعي.

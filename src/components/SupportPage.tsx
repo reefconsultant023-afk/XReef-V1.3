@@ -182,7 +182,7 @@ export default function SupportPage() {
             <Sparkles className="w-12 h-12 text-blue-500" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2 text-center">
-            مرحباً بك في Xreef
+            مرحباً بك في Xreef 1.3
           </h2>
           <p className="text-gray-400 text-center mb-6 text-sm">
             يرجى تسجيل الدخول للوصول إلى الدعم الفني

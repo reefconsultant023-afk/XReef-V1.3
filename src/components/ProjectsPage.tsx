@@ -149,7 +149,7 @@ export default function ProjectsPage() {
             <Sparkles className="w-12 h-12 text-blue-500" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2 text-center">
-            مرحباً بك في Xreef
+            مرحباً بك في Xreef 1.3
           </h2>
           <p className="text-gray-400 text-center mb-6 text-sm">
             يرجى تسجيل الدخول للوصول إلى مشاريعك
@@ -243,7 +243,7 @@ export default function ProjectsPage() {
         <div className="flex justify-between items-center mb-12">
           <div>
             <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
-              مشاريع Xreef
+              مشاريع Xreef 1.3
             </h1>
             <p className="text-gray-400 mt-2">إدارة مشاريع توليد الصور بالذكاء الاصطناعي</p>
           </div>
