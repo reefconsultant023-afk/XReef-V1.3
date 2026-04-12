@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, Image as ImageIcon, Upload, X, Download, Sparkles, ChevronDown, ChevronUp, Maximize2, Clock, Trash2, Crop, Zap, ImagePlus, Library, Edit2, Plus, Save, LayoutTemplate, Settings2, LogIn, LogOut, Mail, Lock, UserPlus, ArrowLeft, LifeBuoy, Wand2 } from "lucide-react";
+import { Loader2, Image as ImageIcon, Upload, X, Download, Sparkles, ChevronDown, ChevronUp, Maximize2, Clock, Trash2, Crop, Zap, ImagePlus, Library, Edit2, Plus, Save, LayoutTemplate, Settings2, LogIn, LogOut, Mail, Lock, UserPlus, ArrowLeft, LifeBuoy, Wand2, Folder } from "lucide-react";
 import ReactCrop, { type Crop as CropType } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { auth, db, signInWithGoogle, signInWithEmail, signUpWithEmail, logOut, handleFirestoreError, OperationType } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, doc, setDoc, onSnapshot, query, orderBy, deleteDoc } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface HistoryItem {
   id: string;
@@ -89,6 +90,7 @@ export default function ProjectWorkspace() {
 
   // Upscale State
   const [isUpscaling, setIsUpscaling] = useState<string | null>(null);
+  const [projectName, setProjectName] = useState<string>("");
 
   // Auth State
   const [user, setUser] = useState<User | null>(null);
@@ -153,6 +155,16 @@ export default function ProjectWorkspace() {
         handleFirestoreError(error, OperationType.GET, `users/${user.uid}/projects/${projectId}/history`);
       });
 
+      // Fetch Project Details
+      const projectRef = doc(db, `users/${user.uid}/projects`, projectId!);
+      const unsubProject = onSnapshot(projectRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setProjectName(docSnap.data().name);
+        }
+      }, (error) => {
+        handleFirestoreError(error, OperationType.GET, `users/${user.uid}/projects/${projectId}`);
+      });
+
       // Fetch Prompt Bank
       const promptBankRef = collection(db, `users/${user.uid}/promptBank`);
       const unsubPromptBank = onSnapshot(promptBankRef, (snapshot) => {
@@ -182,6 +194,7 @@ export default function ProjectWorkspace() {
 
       return () => {
         unsubHistory();
+        unsubProject();
         unsubPromptBank();
       };
     } else {
@@ -406,11 +419,17 @@ export default function ProjectWorkspace() {
     setIsEnhancingPrompt(true);
     setError(null);
     setEnhancedPromptResult(null);
+    const formatPrompt = (p: string) => {
+      const trimmed = p.trim();
+      if (trimmed.startsWith('"') && trimmed.endsWith('"')) return trimmed;
+      return `"${trimmed}"`;
+    };
+
     try {
       const response = await fetch('/api/enhance-prompt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt: formatPrompt(prompt) }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -585,6 +604,12 @@ export default function ProjectWorkspace() {
     setError(null);
     setImageUrls([]);
 
+    const formatPrompt = (p: string) => {
+      const trimmed = p.trim();
+      if (trimmed.startsWith('"') && trimmed.endsWith('"')) return trimmed;
+      return `"${trimmed}"`;
+    };
+
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -592,7 +617,7 @@ export default function ProjectWorkspace() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ 
-          prompt, 
+          prompt: formatPrompt(prompt), 
           image: imageFile,
           styleImage: styleImageFile,
           aspectRatio,
@@ -1104,10 +1129,29 @@ export default function ProjectWorkspace() {
               </button>
             )}
           </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600 tracking-tight flex items-center justify-center gap-4 drop-shadow-lg mt-12 sm:mt-0">
+
+          {projectName && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-2 mt-16 sm:mt-0"
+            >
+              <div className="bg-blue-500/10 border border-blue-500/30 px-6 py-2 rounded-full backdrop-blur-md flex items-center gap-3">
+                <Folder className="w-4 h-4 text-blue-400" />
+                <span className="text-blue-400 font-bold text-lg">مشروع: {projectName}</span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-400 text-sm bg-black/40 px-4 py-1 rounded-full border border-white/5">
+                <Zap size={14} className="text-yellow-500" />
+                <span>تم استهلاك <span className="text-white font-bold">{history.length}</span> مرة توليد صورة</span>
+              </div>
+            </motion.div>
+          )}
+
+          <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600 tracking-tight flex items-center justify-center gap-4 drop-shadow-lg">
             <Sparkles className="w-12 h-12 text-blue-500" />
             Xreef 1.3
           </h1>
+          
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto font-light text-center">
             أطلق العنان لخيالك. قم بتوليد وتعديل الصور باستخدام أحدث تقنيات الذكاء الاصطناعي.
           </p>
