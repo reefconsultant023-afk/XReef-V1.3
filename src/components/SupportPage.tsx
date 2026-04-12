@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, MessageSquare, Clock, CheckCircle, AlertCircle, Trash2, X, Loader2, Sparkles, Mail, Lock, LogIn, UserPlus, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, Plus, MessageSquare, Clock, CheckCircle, AlertCircle, X, Loader2, Sparkles, Mail, Lock, LogIn, UserPlus, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, signInWithGoogle, signInWithEmail, signUpWithEmail, handleFirestoreError, OperationType } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -138,15 +138,6 @@ export default function SupportPage() {
       }, { merge: true });
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/supportTickets`);
-    }
-  };
-
-  const deleteTicket = async (id: string) => {
-    if (!user) return;
-    try {
-      await deleteDoc(doc(db, `users/${user.uid}/supportTickets`, id));
-    } catch (err) {
-      handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/supportTickets`);
     }
   };
 
@@ -365,13 +356,6 @@ export default function SupportPage() {
                           <CheckCircle size={18} />
                         </button>
                       )}
-                      <button 
-                        onClick={() => deleteTicket(ticket.id)}
-                        className="p-2 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                        title="حذف التذكرة"
-                      >
-                        <Trash2 size={18} />
-                      </button>
                     </div>
                   </div>
                 </motion.div>

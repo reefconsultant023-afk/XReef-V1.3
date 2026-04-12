@@ -160,7 +160,7 @@ service cloud.firestore {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId) && isValidSupportTicket(request.resource.data, userId) && uidUnchanged();
       allow update: if isOwner(userId) && isValidSupportTicket(request.resource.data, userId) && uidNotModified();
-      allow delete: if isOwner(userId);
+      allow delete: if false; // Deletion only allowed from Firebase Console
     }
   }
 }
