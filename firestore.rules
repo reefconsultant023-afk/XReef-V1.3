@@ -38,6 +38,7 @@ service cloud.firestore {
     //   - priority: string (required, enum: low, medium, high)
     //   - createdAt: number (required)
     //   - userId: string (required, immutable, matches document owner)
+    //   - userName: string (required, max 100 chars)
     //
     // ===============================================================
 
@@ -119,11 +120,12 @@ service cloud.firestore {
     }
 
     function isValidSupportTicket(data, userId) {
-      return hasOnlyAllowedFields(['id', 'title', 'description', 'status', 'priority', 'createdAt', 'userId']) &&
-             hasRequiredFields(['id', 'title', 'description', 'status', 'priority', 'createdAt', 'userId']) &&
+      return hasOnlyAllowedFields(['id', 'title', 'description', 'status', 'priority', 'createdAt', 'userId', 'userName']) &&
+             hasRequiredFields(['id', 'title', 'description', 'status', 'priority', 'createdAt', 'userId', 'userName']) &&
              isValidString(data.id, 1, 100) &&
              isValidString(data.title, 1, 200) &&
              isValidString(data.description, 1, 5000) &&
+             isValidString(data.userName, 1, 100) &&
              data.status in ['open', 'in-progress', 'resolved', 'closed'] &&
              data.priority in ['low', 'medium', 'high'] &&
              data.createdAt is number &&

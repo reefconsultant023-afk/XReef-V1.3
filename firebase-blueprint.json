@@ -57,9 +57,10 @@
         "status": { "type": "string", "enum": ["open", "in-progress", "resolved", "closed"] },
         "priority": { "type": "string", "enum": ["low", "medium", "high"] },
         "createdAt": { "type": "number" },
-        "userId": { "type": "string" }
+        "userId": { "type": "string" },
+        "userName": { "type": "string" }
       },
-      "required": ["id", "title", "description", "status", "priority", "createdAt", "userId"]
+      "required": ["id", "title", "description", "status", "priority", "createdAt", "userId", "userName"]
     }
   },
   "firestore": {

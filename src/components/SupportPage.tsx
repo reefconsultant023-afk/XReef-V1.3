@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, MessageSquare, Clock, CheckCircle, AlertCircle, Trash2, X, Loader2, Sparkles, Mail, Lock, LogIn, UserPlus } from 'lucide-react';
+import { ArrowLeft, Plus, MessageSquare, Clock, CheckCircle, AlertCircle, Trash2, X, Loader2, Sparkles, Mail, Lock, LogIn, UserPlus, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, signInWithGoogle, signInWithEmail, signUpWithEmail, handleFirestoreError, OperationType } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -14,6 +14,7 @@ interface SupportTicket {
   priority: 'low' | 'medium' | 'high';
   createdAt: number;
   userId: string;
+  userName?: string;
 }
 
 export default function SupportPage() {
@@ -32,6 +33,7 @@ export default function SupportPage() {
   const [newTicket, setNewTicket] = useState({
     title: '',
     description: '',
+    userName: '',
     priority: 'medium' as const
   });
 
@@ -114,7 +116,8 @@ export default function SupportPage() {
       status: 'open',
       priority: newTicket.priority,
       createdAt: Date.now(),
-      userId: user.uid
+      userId: user.uid,
+      userName: newTicket.userName.trim() || user.displayName || user.email?.split('@')[0] || 'مستخدم'
     };
 
     try {
@@ -123,7 +126,7 @@ export default function SupportPage() {
       handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}/supportTickets`);
     }
 
-    setNewTicket({ title: '', description: '', priority: 'medium' });
+    setNewTicket({ title: '', description: '', userName: '', priority: 'medium' });
     setIsModalOpen(false);
   };
 
@@ -341,6 +344,12 @@ export default function SupportPage() {
                           <Clock size={12} />
                           {new Date(ticket.createdAt).toLocaleString('ar-EG')}
                         </span>
+                        {ticket.userName && (
+                          <span className="flex items-center gap-1 text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md">
+                            <UserIcon size={12} />
+                            {ticket.userName}
+                          </span>
+                        )}
                         <span className="capitalize px-2 py-0.5 bg-gray-800 rounded-md">
                           الحالة: {ticket.status === 'open' ? 'مفتوحة' : ticket.status === 'in-progress' ? 'قيد المعالجة' : ticket.status === 'resolved' ? 'محلولة' : 'مغلقة'}
                         </span>
@@ -402,6 +411,18 @@ export default function SupportPage() {
               <form onSubmit={handleCreateTicket}>
                 <div className="space-y-6">
                   <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">اسم الشخص</label>
+                    <input 
+                      type="text"
+                      required
+                      value={newTicket.userName}
+                      onChange={(e) => setNewTicket({...newTicket, userName: e.target.value})}
+                      placeholder="أدخل اسمك أو اسم صاحب المشكلة"
+                      className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+
+                  <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">عنوان المشكلة</label>
                     <input 
                       autoFocus
@@ -448,7 +469,7 @@ export default function SupportPage() {
 
                   <button 
                     type="submit"
-                    disabled={!newTicket.title.trim() || !newTicket.description.trim()}
+                    disabled={!newTicket.title.trim() || !newTicket.description.trim() || !newTicket.userName.trim()}
                     className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 text-white font-semibold py-4 rounded-xl transition-all shadow-lg shadow-blue-900/20"
                   >
                     إرسال التذكرة
