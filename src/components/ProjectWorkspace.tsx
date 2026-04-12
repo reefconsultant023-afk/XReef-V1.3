@@ -96,9 +96,6 @@ export default function ProjectWorkspace() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
 
@@ -214,38 +211,8 @@ export default function ProjectWorkspace() {
     localStorage.setItem('xreef_template_settings', JSON.stringify(templateSettings));
   }, [templateSettings]);
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsAuthLoading(true);
-    setAuthError(null);
-    try {
-      if (authMode === 'login') {
-        await signInWithEmail(email, password);
-      } else {
-        await signUpWithEmail(email, password);
-      }
-      setIsAuthModalOpen(false);
-      setEmail('');
-      setPassword('');
-    } catch (err: any) {
-      console.error("Auth error:", err);
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setAuthError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
-      } else if (err.code === 'auth/email-already-in-use') {
-        setAuthError("البريد الإلكتروني مستخدم بالفعل.");
-      } else if (err.code === 'auth/weak-password') {
-        setAuthError("كلمة المرور ضعيفة، يجب أن تكون 6 أحرف على الأقل.");
-      } else if (err.code === 'auth/operation-not-allowed') {
-        setAuthError("تسجيل الدخول غير مفعل في لوحة تحكم Firebase.");
-      } else {
-        setAuthError(err.message || "حدث خطأ أثناء المصادقة.");
-      }
-    } finally {
-      setIsAuthLoading(false);
-    }
-  };
-
   const handleGoogleAuth = async () => {
+    setIsAuthLoading(true);
     setAuthError(null);
     try {
       await signInWithGoogle();
@@ -256,6 +223,8 @@ export default function ProjectWorkspace() {
       } else {
         setAuthError("حدث خطأ أثناء تسجيل الدخول بحساب Google.");
       }
+    } finally {
+      setIsAuthLoading(false);
     }
   };
 
@@ -877,93 +846,35 @@ export default function ProjectWorkspace() {
               <Sparkles className="w-12 h-12 text-blue-500" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2 text-center">
-              مرحباً بك في Xreef 1.3
+              تسجيل الدخول
             </h2>
-            <p className="text-gray-400 text-center mb-6 text-sm">
-              يرجى تسجيل الدخول لحفظ بياناتك
+            <p className="text-gray-400 text-center mb-8 text-sm">
+              يرجى استخدام حساب Google للمتابعة
             </p>
 
             {authError && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl mb-4 text-sm">
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl mb-6 text-sm">
                 {authError}
               </div>
             )}
 
-            <form onSubmit={handleEmailAuth} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">البريد الإلكتروني</label>
-                <div className="relative">
-                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input 
-                    type="email" 
-                    required 
-                    value={email} 
-                    onChange={e => setEmail(e.target.value)} 
-                    className="w-full pl-4 pr-10 py-3 bg-black/50 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
-                    dir="ltr" 
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">كلمة المرور</label>
-                <div className="relative">
-                  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input 
-                    type="password" 
-                    required 
-                    minLength={6} 
-                    value={password} 
-                    onChange={e => setPassword(e.target.value)} 
-                    className="w-full pl-4 pr-10 py-3 bg-black/50 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
-                    dir="ltr" 
-                  />
-                </div>
-              </div>
-              <button 
-                type="submit" 
-                disabled={isAuthLoading} 
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2 mt-2"
-              >
-                {isAuthLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  authMode === 'login' ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />
-                )}
-                {authMode === 'login' ? 'دخول' : 'تسجيل'}
-              </button>
-            </form>
-
-            <div className="mt-6 flex items-center justify-between">
-              <hr className="w-full border-gray-700" />
-              <span className="px-3 text-gray-500 text-sm">أو</span>
-              <hr className="w-full border-gray-700" />
-            </div>
-
             <button 
               onClick={handleGoogleAuth} 
-              className="mt-6 w-full bg-white hover:bg-gray-100 text-gray-900 font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2"
+              disabled={isAuthLoading}
+              className="w-full bg-white hover:bg-gray-100 text-gray-900 font-bold py-4 rounded-xl transition-all flex justify-center items-center gap-3 shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
+              {isAuthLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+              ) : (
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+              )}
               المتابعة باستخدام Google
             </button>
-
-            <div className="mt-6 text-center text-sm text-gray-400">
-              {authMode === 'login' ? 'ليس لديك حساب؟ ' : 'لديك حساب بالفعل؟ '}
-              <button 
-                onClick={() => { 
-                  setAuthMode(authMode === 'login' ? 'signup' : 'login'); 
-                  setAuthError(null); 
-                }} 
-                className="text-blue-400 hover:text-blue-300 font-bold"
-              >
-                {authMode === 'login' ? 'إنشاء حساب' : 'تسجيل الدخول'}
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -1118,7 +1029,6 @@ export default function ProjectWorkspace() {
             ) : (
               <button
                 onClick={() => {
-                  setAuthMode('login');
                   setAuthError(null);
                   setIsAuthModalOpen(true);
                 }}
