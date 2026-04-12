@@ -70,7 +70,6 @@ export default function ProjectWorkspace() {
   // Advanced Settings State
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [resolution, setResolution] = useState("1K");
-  const [is8KMode, setIs8KMode] = useState(false);
   
   // Fullscreen State
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -385,26 +384,12 @@ export default function ProjectWorkspace() {
     setIsEnhancingPrompt(true);
     setError(null);
     setEnhancedPromptResult(null);
-    const formatPrompt = (p: string) => {
-      let trimmed = p.trim();
-      
-      // Add 8K keywords if selected
-      if (is8KMode) {
-        const k8Keywords = "Volumetric lighting - Sharp focus on the face - highly detailed eyes - 8K - clear facial features";
-        if (!trimmed.toLowerCase().includes("8k")) {
-          trimmed = `${trimmed}, ${k8Keywords}`;
-        }
-      }
-
-      if (trimmed.startsWith('"') && trimmed.endsWith('"')) return trimmed;
-      return `"${trimmed}"`;
-    };
 
     try {
       const response = await fetch('/api/enhance-prompt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: formatPrompt(prompt) }),
+        body: JSON.stringify({ prompt: prompt.trim() }),
       });
       let data;
       const contentType = response.headers.get("content-type");
@@ -565,21 +550,6 @@ export default function ProjectWorkspace() {
     setError(null);
     setImageUrls([]);
 
-    const formatPrompt = (p: string) => {
-      let trimmed = p.trim();
-      
-      // Add 8K keywords if selected
-      if (is8KMode) {
-        const k8Keywords = "Volumetric lighting - Sharp focus on the face - highly detailed eyes - 8K - clear facial features";
-        if (!trimmed.toLowerCase().includes("8k")) {
-          trimmed = `${trimmed}, ${k8Keywords}`;
-        }
-      }
-
-      if (trimmed.startsWith('"') && trimmed.endsWith('"')) return trimmed;
-      return `"${trimmed}"`;
-    };
-
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -587,7 +557,7 @@ export default function ProjectWorkspace() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ 
-          prompt: formatPrompt(prompt), 
+          prompt: prompt.trim(), 
           images: imageFiles,
           aspectRatio,
           resolution,
@@ -1162,25 +1132,7 @@ export default function ProjectWorkspace() {
 
               {/* Advanced Settings (Always Visible) */}
               <div className="space-y-5 p-5 bg-black/40 border border-blue-500/20 rounded-3xl shadow-inner">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* 8K Special Box */}
-                  <div 
-                    onClick={() => setIs8KMode(!is8KMode)}
-                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center gap-2 group ${
-                      is8KMode 
-                      ? "bg-blue-600/20 border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]" 
-                      : "bg-black/60 border-blue-500/10 hover:border-blue-500/40"
-                    }`}
-                  >
-                    <div className={`p-2 rounded-full transition-colors ${is8KMode ? "bg-blue-500 text-white" : "bg-blue-500/10 text-blue-500/50 group-hover:text-blue-400"}`}>
-                      <Zap className="w-5 h-5" />
-                    </div>
-                    <div className="text-center">
-                      <div className={`text-xs font-bold ${is8KMode ? "text-white" : "text-gray-400"}`}>وضع 8K</div>
-                      <div className={`text-[10px] ${is8KMode ? "text-blue-200" : "text-gray-500"}`}>دقة سينمائية</div>
-                    </div>
-                  </div>
-
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Aspect Ratio */}
                   <div className="space-y-2">
                     <label className="block text-xs font-medium text-gray-400">

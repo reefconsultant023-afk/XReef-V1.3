@@ -45,7 +45,8 @@ async function startServer() {
       if (resolution) {
         input.resolution = resolution === "8K" ? "4K" : resolution;
       }
-      if (inputImages) {
+      if (inputImages && inputImages.length > 0) {
+        input.image = inputImages[0];
         input.image_input = inputImages;
       }
 
