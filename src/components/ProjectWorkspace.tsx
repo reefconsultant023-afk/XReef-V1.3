@@ -102,6 +102,7 @@ export default function ProjectWorkspace() {
 
   // Enhance Prompt State
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
+  const [enhancedPromptResult, setEnhancedPromptResult] = useState<string | null>(null);
 
   // Prompt Bank State
   const [isPromptBankOpen, setIsPromptBankOpen] = useState(false);
@@ -313,7 +314,7 @@ export default function ProjectWorkspace() {
 
   const handleSavePrompt = async () => {
     if (!editingPrompt || !editingPrompt.title.trim() || !editingPrompt.prompt.trim()) return;
-    const newBank = [...promptBank];
+    const newBank = JSON.parse(JSON.stringify(promptBank));
     const cat = newBank[editingPrompt.catIdx];
     
     if (editingPrompt.promptIdx === -1) {
@@ -340,8 +341,7 @@ export default function ProjectWorkspace() {
   };
 
   const handleDeletePrompt = async (catIdx: number, promptIdx: number) => {
-    if(!confirm("هل أنت متأكد من حذف هذا الوصف؟")) return;
-    const newBank = [...promptBank];
+    const newBank = JSON.parse(JSON.stringify(promptBank));
     const cat = newBank[catIdx];
     cat.prompts.splice(promptIdx, 1);
     
@@ -385,7 +385,6 @@ export default function ProjectWorkspace() {
   };
 
   const handleDeleteCategory = async (catIdx: number) => {
-    if(!confirm("هل أنت متأكد من حذف هذا التصنيف بالكامل؟")) return;
     const cat = promptBank[catIdx];
     
     if (user && cat.id) {
@@ -395,7 +394,7 @@ export default function ProjectWorkspace() {
         handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/promptBank`);
       }
     } else {
-      const newBank = [...promptBank];
+      const newBank = JSON.parse(JSON.stringify(promptBank));
       newBank.splice(catIdx, 1);
       setPromptBank(newBank);
       localStorage.setItem('xreef_prompt_bank', JSON.stringify(newBank));
@@ -406,6 +405,7 @@ export default function ProjectWorkspace() {
     if (!prompt.trim()) return;
     setIsEnhancingPrompt(true);
     setError(null);
+    setEnhancedPromptResult(null);
     try {
       const response = await fetch('/api/enhance-prompt', {
         method: 'POST',
@@ -416,7 +416,7 @@ export default function ProjectWorkspace() {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to enhance prompt');
       }
-      setPrompt(data.enhancedPrompt);
+      setEnhancedPromptResult(data.enhancedPrompt);
     } catch (err: any) {
       console.error("Enhance prompt error:", err);
       setError(err.message || "حدث خطأ أثناء تحسين الوصف");
@@ -1138,8 +1138,8 @@ export default function ProjectWorkspace() {
                 <textarea
                   id="prompt"
                   name="prompt"
-                  rows={4}
-                  className="appearance-none rounded-3xl relative block w-full px-6 py-4 bg-black/60 border border-blue-500/20 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-base resize-none transition-all shadow-inner"
+                  rows={8}
+                  className="appearance-none rounded-3xl relative block w-full px-6 py-4 bg-black/60 border border-blue-500/20 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-base resize-none transition-all shadow-inner min-h-[150px]"
                   placeholder="مثال: مدينة مستقبلية مضيئة بالنيون تحت المطر، ألوان سينمائية..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
@@ -1165,6 +1165,40 @@ export default function ProjectWorkspace() {
                     )}
                   </button>
                 </div>
+                
+                {/* Enhanced Prompt Result Box */}
+                {enhancedPromptResult && (
+                  <div className="mt-4 p-5 bg-purple-900/20 border border-purple-500/30 rounded-2xl shadow-inner animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-bold text-purple-300 flex items-center gap-2">
+                        <Wand2 className="w-4 h-4" />
+                        نتيجة التحسين
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPrompt(enhancedPromptResult);
+                            setEnhancedPromptResult(null);
+                          }}
+                          className="text-xs font-medium bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-full transition-colors shadow-md"
+                        >
+                          استخدام هذا الوصف
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEnhancedPromptResult(null)}
+                          className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-800 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-purple-100/90 leading-relaxed" dir="ltr">
+                      {enhancedPromptResult}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Advanced Settings (Always Visible) */}
