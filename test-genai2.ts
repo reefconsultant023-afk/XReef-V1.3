@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 async function test() {
   try {
-    const ai = new GoogleGenAI();
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "dummy" });
     await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: "Hello",

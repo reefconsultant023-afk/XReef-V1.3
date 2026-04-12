@@ -83,25 +83,26 @@ async function startServer() {
       }
 
       const count = Math.min(Math.max(Number(numImages) || 1, 1), 4);
-      const results = [];
       
       let replicateModel = model;
       if (model === "sdxl-based/realvisxl-v3-multi-controlnet-lora") {
         replicateModel = "sdxl-based/realvisxl-v3-multi-controlnet-lora:90a4a3604cd637cb9f1a2bdae1cfa9ed869362ca028814cdce310a78e27daade";
       }
       
-      // Run sequentially to avoid rate limit bursts
-      for (let i = 0; i < count; i++) {
-        try {
-          const output = await replicate.run(replicateModel as `${string}/${string}`, { input });
-          results.push(output);
-        } catch (err: any) {
-          if (err.status === 429 && i > 0) {
-            console.warn("Rate limit hit, returning partial results");
-            break;
-          }
-          throw err;
-        }
+      // Run in parallel to maximize speed
+      const promises = Array.from({ length: count }).map(() => 
+        replicate.run(replicateModel as `${string}/${string}`, { input })
+      );
+
+      const settledResults = await Promise.allSettled(promises);
+      
+      const results = settledResults
+        .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
+        .map(r => r.value);
+
+      if (results.length === 0 && settledResults.length > 0) {
+        // If all failed, throw the first error
+        throw (settledResults[0] as PromiseRejectedResult).reason;
       }
 
       const outputs = results.map((output: any) => {
