@@ -389,7 +389,16 @@ export default function ProjectWorkspace() {
     setError(null);
     setEnhancedPromptResult(null);
     const formatPrompt = (p: string) => {
-      const trimmed = p.trim();
+      let trimmed = p.trim();
+      
+      // Add 8K keywords if selected
+      if (resolution === "8K") {
+        const k8Keywords = "Volumetric lighting - Sharp focus on the face - highly detailed eyes - 8K - clear facial features";
+        if (!trimmed.toLowerCase().includes("8k")) {
+          trimmed = `${trimmed}, ${k8Keywords}`;
+        }
+      }
+
       if (trimmed.startsWith('"') && trimmed.endsWith('"')) return trimmed;
       return `"${trimmed}"`;
     };
@@ -577,7 +586,16 @@ export default function ProjectWorkspace() {
     setImageUrls([]);
 
     const formatPrompt = (p: string) => {
-      const trimmed = p.trim();
+      let trimmed = p.trim();
+      
+      // Add 8K keywords if selected
+      if (resolution === "8K") {
+        const k8Keywords = "Volumetric lighting - Sharp focus on the face - highly detailed eyes - 8K - clear facial features";
+        if (!trimmed.toLowerCase().includes("8k")) {
+          trimmed = `${trimmed}, ${k8Keywords}`;
+        }
+      }
+
       if (trimmed.startsWith('"') && trimmed.endsWith('"')) return trimmed;
       return `"${trimmed}"`;
     };
@@ -1160,7 +1178,25 @@ export default function ProjectWorkspace() {
 
               {/* Advanced Settings (Always Visible) */}
               <div className="space-y-5 p-5 bg-black/40 border border-blue-500/20 rounded-3xl shadow-inner">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {/* 8K Special Box */}
+                  <div 
+                    onClick={() => setResolution(resolution === "8K" ? "1K" : "8K")}
+                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center gap-2 group ${
+                      resolution === "8K" 
+                      ? "bg-blue-600/20 border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]" 
+                      : "bg-black/60 border-blue-500/10 hover:border-blue-500/40"
+                    }`}
+                  >
+                    <div className={`p-2 rounded-full transition-colors ${resolution === "8K" ? "bg-blue-500 text-white" : "bg-blue-500/10 text-blue-500/50 group-hover:text-blue-400"}`}>
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <div className="text-center">
+                      <div className={`text-xs font-bold ${resolution === "8K" ? "text-white" : "text-gray-400"}`}>وضع 8K</div>
+                      <div className={`text-[10px] ${resolution === "8K" ? "text-blue-200" : "text-gray-500"}`}>دقة سينمائية</div>
+                    </div>
+                  </div>
+
                   {/* Model Selection */}
                   <div className="space-y-2">
                     <label className="block text-xs font-medium text-gray-400">
@@ -1201,9 +1237,10 @@ export default function ProjectWorkspace() {
                       الدقة (Resolution)
                     </label>
                     <select
-                      value={resolution}
+                      value={resolution === "8K" ? "4K" : resolution}
+                      disabled={resolution === "8K"}
                       onChange={(e) => setResolution(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-black/60 border border-blue-500/20 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
+                      className={`w-full px-4 py-2.5 bg-black/60 border border-blue-500/20 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none ${resolution === "8K" ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                       <option value="1K">عادي (1K)</option>
                       <option value="2K">عالي (2K)</option>

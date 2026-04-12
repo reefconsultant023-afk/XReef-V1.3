@@ -45,7 +45,7 @@ async function startServer() {
         if (resolution) {
           if (resolution === "1K") input.resolution = "1 MP";
           else if (resolution === "2K") input.resolution = "2 MP";
-          else if (resolution === "4K") input.resolution = "4 MP";
+          else if (resolution === "4K" || resolution === "8K") input.resolution = "4 MP";
           else input.resolution = resolution;
         }
         if (inputImages) {
@@ -77,7 +77,7 @@ async function startServer() {
           input.aspect_ratio = aspectRatio;
         }
         if (resolution) {
-          input.resolution = resolution;
+          input.resolution = resolution === "8K" ? "4K" : resolution;
         }
         if (inputImages) {
           input.image_input = inputImages;
@@ -124,7 +124,15 @@ async function startServer() {
       res.json({ outputs });
     } catch (error: any) {
       console.error("Error generating image:", error);
-      res.status(500).json({ error: error.message || "Failed to generate image" });
+      
+      let errorMessage = error.message || "Failed to generate image";
+      
+      // Handle Replicate 402 Payment Required
+      if (errorMessage.includes("402") || errorMessage.toLowerCase().includes("insufficient credit")) {
+        errorMessage = "رصيدك في Replicate غير كافٍ. يرجى شحن حسابك للمتابعة.";
+      }
+      
+      res.status(error.status || 500).json({ error: errorMessage });
     }
   });
 
@@ -166,7 +174,11 @@ async function startServer() {
       res.json({ output: imageUrl });
     } catch (error: any) {
       console.error("Error upscaling image:", error);
-      res.status(500).json({ error: error.message || "Failed to upscale image" });
+      let errorMessage = error.message || "Failed to upscale image";
+      if (errorMessage.includes("402") || errorMessage.toLowerCase().includes("insufficient credit")) {
+        errorMessage = "رصيدك في Replicate غير كافٍ. يرجى شحن حسابك للمتابعة.";
+      }
+      res.status(error.status || 500).json({ error: errorMessage });
     }
   });
 
@@ -204,7 +216,11 @@ async function startServer() {
       res.json({ enhancedPrompt });
     } catch (error: any) {
       console.error("Error enhancing prompt:", error);
-      res.status(500).json({ error: error.message || "Failed to enhance prompt" });
+      let errorMessage = error.message || "Failed to enhance prompt";
+      if (errorMessage.includes("402") || errorMessage.toLowerCase().includes("insufficient credit")) {
+        errorMessage = "رصيدك في Replicate غير كافٍ. يرجى شحن حسابك للمتابعة.";
+      }
+      res.status(error.status || 500).json({ error: errorMessage });
     }
   });
 
