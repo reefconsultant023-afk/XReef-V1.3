@@ -409,7 +409,18 @@ export default function ProjectWorkspace() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: formatPrompt(prompt) }),
       });
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        if (text.includes("Please wait while your application starts") || text.includes("application is starting")) {
+          throw new Error("الخادم قيد التشغيل حالياً. يرجى الانتظار بضع ثوانٍ والمحاولة مرة أخرى.");
+        }
+        throw new Error(`الخادم لم يرجع استجابة صحيحة. رمز الخطأ: ${response.status}`);
+      }
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to enhance prompt');
       }
@@ -623,8 +634,10 @@ export default function ProjectWorkspace() {
         data = await response.json();
       } else {
         const text = await response.text();
-        console.error("Non-JSON response:", text);
-        throw new Error(`الخادم لم يرجع استجابة صحيحة (ربما مسار API غير موجود). رمز الخطأ: ${response.status}`);
+        if (text.includes("Please wait while your application starts") || text.includes("application is starting")) {
+          throw new Error("الخادم قيد التشغيل حالياً. يرجى الانتظار بضع ثوانٍ والمحاولة مرة أخرى.");
+        }
+        throw new Error(`الخادم لم يرجع استجابة صحيحة. رمز الخطأ: ${response.status}`);
       }
 
       if (!response.ok) {
@@ -697,7 +710,11 @@ export default function ProjectWorkspace() {
       if (contentType && contentType.includes("application/json")) {
         data = await response.json();
       } else {
-        throw new Error(`الخادم لم يرجع استجابة صحيحة. رمز الخطأ: ${response.status}`);
+        const text = await response.text();
+        if (text.includes("Please wait while your application starts") || text.includes("application is starting")) {
+          throw new Error("الخادم قيد التشغيل حالياً. يرجى الانتظار بضع ثوانٍ والمحاولة مرة أخرى.");
+        }
+        throw new Error(`الخادم لم يرجع استجابة صحيحة. رمز الخطأ: ${response.status}, النوع: ${contentType}`);
       }
 
       if (!response.ok) {
