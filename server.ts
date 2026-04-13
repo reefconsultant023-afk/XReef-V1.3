@@ -174,7 +174,7 @@ async function startServer() {
       const input = {
         prompt: finalPrompt,
         system_instruction: "You are an expert AI image generation prompt engineer and translator. Your task is to translate any non-English prompts to English and then significantly expand them. You must add vivid details, lighting, style, and composition keywords to generate the best possible image. NEVER summarize or shorten the user's input; always build upon it to make it richer and more descriptive. Always output the result in English.",
-        thinking_level: "medium",
+        thinking_level: "high",
         temperature: 1,
         max_output_tokens: 1000
       };
