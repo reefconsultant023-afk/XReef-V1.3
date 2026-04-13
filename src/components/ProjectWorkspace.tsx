@@ -389,7 +389,10 @@ export default function ProjectWorkspace() {
       const response = await fetch('/api/enhance-prompt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: prompt.trim() }),
+        body: JSON.stringify({ 
+          prompt: prompt.trim(),
+          image: imageFiles.length > 0 ? imageFiles[0] : null
+        }),
       });
       let data;
       const contentType = response.headers.get("content-type");

@@ -143,7 +143,7 @@ async function startServer() {
 
   app.post("/api/enhance-prompt", async (req, res) => {
     try {
-      const { prompt } = req.body;
+      const { prompt, image } = req.body;
       if (!prompt) {
         return res.status(400).json({ error: "Prompt is required" });
       }
@@ -157,13 +157,29 @@ async function startServer() {
         auth: replicateApiToken,
       });
 
+      let finalPrompt = `Translate the following prompt to English if it is in another language, then EXPAND and ENHANCE it significantly. Add rich, vivid details, lighting, atmosphere, camera settings, and style keywords optimized for a high-end AI image generator. \n\nCRITICAL: DO NOT summarize or shorten the original prompt. If the original prompt is long, make the enhanced prompt even longer and more detailed. \n\nReturn ONLY the final enhanced prompt in English, without any conversational text, quotes, or explanations:\n\nOriginal prompt: ${prompt}`;
+
+      if (image) {
+        try {
+          const ascii85 = require('ascii85');
+          const base64Data = image.split(',')[1] || image;
+          const buf = Buffer.from(base64Data, 'base64');
+          const b85 = ascii85.encode(buf).toString();
+          finalPrompt += `\n\n[Attached Image Data in Base85 encoding: ${b85}]`;
+        } catch (e) {
+          console.error("Failed to encode image to Base85:", e);
+        }
+      }
+
       const input = {
-        prompt: `Translate the following prompt to English if it is in another language, then EXPAND and ENHANCE it significantly. Add rich, vivid details, lighting, atmosphere, camera settings, and style keywords optimized for a high-end AI image generator. \n\nCRITICAL: DO NOT summarize or shorten the original prompt. If the original prompt is long, make the enhanced prompt even longer and more detailed. \n\nReturn ONLY the final enhanced prompt in English, without any conversational text, quotes, or explanations:\n\nOriginal prompt: ${prompt}`,
-        system_prompt: "You are an expert AI image generation prompt engineer and translator. Your task is to translate any non-English prompts to English and then significantly expand them. You must add vivid details, lighting, style, and composition keywords to generate the best possible image. NEVER summarize or shorten the user's input; always build upon it to make it richer and more descriptive. Always output the result in English.",
-        max_tokens: 1000
+        prompt: finalPrompt,
+        system_instruction: "You are an expert AI image generation prompt engineer and translator. Your task is to translate any non-English prompts to English and then significantly expand them. You must add vivid details, lighting, style, and composition keywords to generate the best possible image. NEVER summarize or shorten the user's input; always build upon it to make it richer and more descriptive. Always output the result in English.",
+        thinking_level: "medium",
+        temperature: 1,
+        max_output_tokens: 1000
       };
 
-      const output: any = await replicate.run("anthropic/claude-opus-4.6", { input });
+      const output: any = await replicate.run("google/gemini-3.1-pro", { input });
       
       let enhancedPrompt = "";
       if (Array.isArray(output)) {
