@@ -2,6 +2,7 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import Replicate from "replicate";
+import ascii85 from "ascii85";
 
 async function startServer() {
   const app = express();
@@ -10,6 +11,10 @@ async function startServer() {
   app.use(express.json({ limit: '50mb' }));
 
   // API routes FIRST
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   app.post("/api/generate", async (req, res) => {
     try {
       const { prompt, image, images, aspectRatio, resolution, negativePrompt } = req.body;
@@ -142,6 +147,7 @@ async function startServer() {
   });
 
   app.post("/api/enhance-prompt", async (req, res) => {
+    console.log("Received enhance-prompt request");
     try {
       const { prompt, image } = req.body;
       if (!prompt) {
@@ -157,15 +163,21 @@ async function startServer() {
         auth: replicateApiToken,
       });
 
-      let finalPrompt = `Translate the following prompt to English if it is in another language, then EXPAND and ENHANCE it significantly. Add rich, vivid details, lighting, atmosphere, camera settings, and style keywords optimized for a high-end AI image generator. \n\nCRITICAL: DO NOT summarize or shorten the original prompt. If the original prompt is long, make the enhanced prompt even longer and more detailed. \n\nReturn ONLY the final enhanced prompt in English, without any conversational text, quotes, or explanations:\n\nOriginal prompt: ${prompt}`;
+      let finalPrompt = `Translate the following prompt to English. If it is already in English, return it as is. \n\nReturn ONLY the translated prompt in English, without any conversational text, quotes, or explanations:\n\nOriginal prompt: ${prompt}`;
 
       if (image) {
         try {
-          const ascii85 = require('ascii85');
+          console.log("Encoding image to Base85...");
           const base64Data = image.split(',')[1] || image;
           const buf = Buffer.from(base64Data, 'base64');
-          const b85 = ascii85.encode(buf).toString();
-          finalPrompt += `\n\n[Attached Image Data in Base85 encoding: ${b85}]`;
+          // Use ascii85 if available, otherwise fallback to a simple string or log error
+          if (ascii85 && typeof ascii85.encode === 'function') {
+            const b85 = ascii85.encode(buf).toString();
+            finalPrompt += `\n\n[Attached Image Data in Base85 encoding: ${b85}]`;
+            console.log("Image encoded successfully");
+          } else {
+            console.warn("ascii85.encode is not a function, skipping image encoding");
+          }
         } catch (e) {
           console.error("Failed to encode image to Base85:", e);
         }
@@ -173,13 +185,15 @@ async function startServer() {
 
       const input = {
         prompt: finalPrompt,
-        system_instruction: "You are an expert AI image generation prompt engineer and translator. Your task is to translate any non-English prompts to English and then significantly expand them. You must add vivid details, lighting, style, and composition keywords to generate the best possible image. NEVER summarize or shorten the user's input; always build upon it to make it richer and more descriptive. Always output the result in English.",
-        thinking_level: "high",
+        system_instruction: "You are an expert translator. Your task is to translate any non-English prompts to English accurately. Do not add any extra details or enhance the prompt. Simply provide the English translation. Always output the result in English.",
+        thinking_level: "medium",
         temperature: 1,
         max_output_tokens: 1000
       };
 
+      console.log("Calling Replicate with Gemini 3.1 Pro (thinking_level: high)...");
       const output: any = await replicate.run("google/gemini-3.1-pro", { input });
+      console.log("Replicate response received");
       
       let enhancedPrompt = "";
       if (Array.isArray(output)) {

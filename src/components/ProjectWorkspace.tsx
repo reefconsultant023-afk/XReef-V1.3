@@ -412,7 +412,11 @@ export default function ProjectWorkspace() {
       setEnhancedPromptResult(data.enhancedPrompt);
     } catch (err: any) {
       console.error("Enhance prompt error:", err);
-      setError(err.message || "حدث خطأ أثناء تحسين الوصف");
+      if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+        setError("فشل الاتصال بالخادم. قد يكون الطلب كبيراً جداً (حجم الصورة) أو أن هناك مشكلة في الشبكة.");
+      } else {
+        setError(err.message || "حدث خطأ أثناء ترجمة الوصف");
+      }
     } finally {
       setIsEnhancingPrompt(false);
     }
@@ -1087,12 +1091,12 @@ export default function ProjectWorkspace() {
                     {isEnhancingPrompt ? (
                       <>
                         <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-                        جاري التحسين...
+                        جاري الترجمة...
                       </>
                     ) : (
                       <>
                         <Wand2 className="w-4 h-4" />
-                        تحسين الوصف بالذكاء الاصطناعي
+                        ترجمة الوصف (Gemini Pro 3.1)
                       </>
                     )}
                   </button>
@@ -1104,7 +1108,7 @@ export default function ProjectWorkspace() {
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-sm font-bold text-purple-300 flex items-center gap-2">
                         <Wand2 className="w-4 h-4" />
-                        نتيجة التحسين
+                        نتيجة الترجمة (Gemini Pro 3.1)
                       </h4>
                       <div className="flex items-center gap-2">
                         <button
