@@ -386,7 +386,7 @@ export default function ProjectWorkspace() {
     setEnhancedPromptResult(null);
 
     try {
-      const response = await fetch('/api/enhance-prompt', {
+      const response = await fetch('/api/translate-prompt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -400,8 +400,12 @@ export default function ProjectWorkspace() {
         data = await response.json();
       } else {
         const text = await response.text();
+        console.error("Non-JSON response:", text);
         if (text.includes("Please wait while your application starts") || text.includes("application is starting")) {
           throw new Error("الخادم قيد التشغيل حالياً. يرجى الانتظار بضع ثوانٍ والمحاولة مرة أخرى.");
+        }
+        if (response.status === 405) {
+          throw new Error("حدث خطأ في الاتصال بالخادم (405). يرجى تحديث الصفحة والمحاولة مرة أخرى.");
         }
         throw new Error(`الخادم لم يرجع استجابة صحيحة. رمز الخطأ: ${response.status}`);
       }

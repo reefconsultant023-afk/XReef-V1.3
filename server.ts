@@ -10,6 +10,11 @@ async function startServer() {
 
   app.use(express.json({ limit: '50mb' }));
 
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+  });
+
   // API routes FIRST
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -146,8 +151,8 @@ async function startServer() {
     }
   });
 
-  app.post("/api/enhance-prompt", async (req, res) => {
-    console.log("Received enhance-prompt request");
+  app.post("/api/translate-prompt", async (req, res) => {
+    console.log("Received translate-prompt request");
     try {
       const { prompt, image } = req.body;
       if (!prompt) {
