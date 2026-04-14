@@ -7,7 +7,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { prompt, image, styleImage, aspectRatio, resolution, negativePrompt, numImages = 1, model = "google/nano-banana-pro" } = req.body;
+    const { prompt, image, images, styleImage, aspectRatio, resolution, negativePrompt, numImages = 1, model = "google/nano-banana-pro" } = req.body;
     if (!prompt) {
       return res.status(400).json({ error: "Prompt is required" });
     }
@@ -27,7 +27,7 @@ export default async function handler(req: any, res: any) {
       finalPrompt += `\nNegative prompt: ${negativePrompt}`;
     }
 
-    const inputImages = image ? [image] : [];
+    const inputImages = images && Array.isArray(images) && images.length > 0 ? images : (image ? [image] : []);
     if (styleImage) inputImages.push(styleImage);
     const hasImage = inputImages.length > 0;
 
