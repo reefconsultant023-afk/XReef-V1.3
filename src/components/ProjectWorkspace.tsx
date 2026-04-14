@@ -99,6 +99,25 @@ export default function ProjectWorkspace() {
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [enhancedPromptResult, setEnhancedPromptResult] = useState<string | null>(null);
 
+  // Style Selection State
+  const [selectedStyle, setSelectedStyle] = useState<string>("none");
+
+  const IMAGE_STYLES = [
+    { id: "none", name: "بدون ستايل", icon: "✨", prompt: "" },
+    { id: "cinematic", name: "سينمائي", icon: "🎬", prompt: "cinematic lighting, highly detailed, 8k, masterpiece, dramatic atmosphere, professional photography" },
+    { id: "anime", name: "أنمي", icon: "🌸", prompt: "anime style, vibrant colors, studio ghibli aesthetic, clean lines, high quality anime art" },
+    { id: "3d", name: "ثلاثي الأبعاد", icon: "🧊", prompt: "3D render, Unreal Engine 5, octane render, ray tracing, volumetric lighting, hyper-realistic, detailed textures" },
+    { id: "digital", name: "فن رقمي", icon: "🎨", prompt: "digital art, trending on artstation, sharp focus, intricate details, vibrant composition" },
+    { id: "cyberpunk", name: "سايبربانك", icon: "🌃", prompt: "cyberpunk aesthetic, neon lights, futuristic, rainy night, high tech, glowing elements" },
+    { id: "pixel", name: "بكسل آرت", icon: "👾", prompt: "pixel art style, 8-bit, 16-bit, retro game aesthetic, blocky, detailed pixel work" },
+    { id: "oil", name: "لوحة زيتية", icon: "🖼️", prompt: "oil painting style, heavy brushstrokes, canvas texture, artistic, masterpiece, rich colors" },
+    { id: "watercolor", name: "ألوان مائية", icon: "💧", prompt: "watercolor painting, soft edges, fluid colors, artistic, paper texture, elegant" },
+    { id: "disney", name: "ديزني / بيكسار", icon: "🐭", prompt: "disney pixar animation style, 3d character design, cute, vibrant, high quality 3d render" },
+    { id: "vintage", name: "قديم / كلاسيك", icon: "🎞️", prompt: "vintage photography, film grain, faded colors, nostalgic, 70s aesthetic, retro feel" },
+    { id: "sketch", name: "رسم يدوي", icon: "✏️", prompt: "pencil sketch, hand-drawn, charcoal art, artistic, rough strokes, detailed line art" },
+    { id: "fantasy", name: "خيالي", icon: "🧙", prompt: "fantasy world, ethereal, magical atmosphere, intricate details, epic scale, mythical" },
+  ];
+
   // Prompt Bank State
   const [isPromptBankOpen, setIsPromptBankOpen] = useState(false);
   const [promptBank, setPromptBank] = useState<any[]>([]);
@@ -562,13 +581,19 @@ export default function ProjectWorkspace() {
     setImageUrls([]);
 
     try {
+      let finalPromptToSend = prompt.trim();
+      const styleObj = IMAGE_STYLES.find(s => s.id === selectedStyle);
+      if (styleObj && styleObj.prompt) {
+        finalPromptToSend += `, ${styleObj.prompt}`;
+      }
+
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ 
-          prompt: prompt.trim(), 
+          prompt: finalPromptToSend, 
           images: imageFiles,
           aspectRatio,
           resolution,
@@ -610,7 +635,11 @@ export default function ProjectWorkspace() {
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "حدث خطأ أثناء توليد الصورة");
+      let msg = err.message || "حدث خطأ أثناء توليد الصورة";
+      if (msg.includes("Prediction failed")) {
+        msg = "فشل توليد الصورة. قد يكون السبب هو سياسة الأمان أو مشكلة مؤقتة في الخادم. حاول تغيير الوصف أو المحاولة لاحقاً.";
+      }
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -1213,6 +1242,32 @@ export default function ProjectWorkspace() {
                     accept="image/*"
                     className="hidden"
                   />
+                </div>
+              </div>
+
+              {/* Style Selector */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-200 ml-1">
+                  اختر ستايل الصورة
+                </label>
+                <div className="flex overflow-x-auto pb-2 gap-3 scrollbar-hide -mx-1 px-1">
+                  {IMAGE_STYLES.map((style) => (
+                    <button
+                      key={style.id}
+                      type="button"
+                      onClick={() => setSelectedStyle(style.id)}
+                      className={`flex-shrink-0 flex flex-col items-center justify-center w-24 h-24 rounded-2xl border transition-all duration-300 ${
+                        selectedStyle === style.id
+                          ? 'bg-blue-600/30 border-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.3)]'
+                          : 'bg-black/40 border-white/10 hover:border-white/30'
+                      }`}
+                    >
+                      <span className="text-2xl mb-1">{style.icon}</span>
+                      <span className={`text-[10px] font-bold ${selectedStyle === style.id ? 'text-white' : 'text-gray-400'}`}>
+                        {style.name}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
 

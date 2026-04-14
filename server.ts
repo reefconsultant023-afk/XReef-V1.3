@@ -41,13 +41,13 @@ async function startServer() {
         finalPrompt += `\nNegative prompt: ${negativePrompt}`;
       }
 
+      const inputImages = images && Array.isArray(images) && images.length > 0 ? images : (image ? [image] : null);
+
       const input: any = { 
         prompt: finalPrompt,
-        safety_filter_level: "block_only_high",
+        safety_filter_level: "block_low_and_above",
         allow_fallback_model: true
       };
-
-      const inputImages = images && Array.isArray(images) && images.length > 0 ? images : (image ? [image] : null);
 
       if (aspectRatio) {
         input.aspect_ratio = aspectRatio;
@@ -61,9 +61,14 @@ async function startServer() {
       }
 
       // Run in parallel to maximize speed
-      const promises = Array.from({ length: 1 }).map(() => 
-        replicate.run("google/nano-banana-pro", { input })
-      );
+      const promises = Array.from({ length: 1 }).map(async () => {
+        try {
+          return await replicate.run("google/nano-banana-pro", { input });
+        } catch (err: any) {
+          console.error(`Error with google/nano-banana-pro:`, err);
+          throw err;
+        }
+      });
 
       const settledResults = await Promise.allSettled(promises);
       
@@ -93,6 +98,9 @@ async function startServer() {
       res.json({ outputs });
     } catch (error: any) {
       console.error("Error generating image:", error);
+      if (error.logs) {
+        console.log("Replicate logs:", error.logs);
+      }
       
       let errorMessage = error.message || "Failed to generate image";
       

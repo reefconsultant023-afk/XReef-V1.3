@@ -27,45 +27,25 @@ export default async function handler(req: any, res: any) {
       finalPrompt += `\nNegative prompt: ${negativePrompt}`;
     }
 
+    const inputImages = image ? [image] : [];
+    if (styleImage) inputImages.push(styleImage);
+    const hasImage = inputImages.length > 0;
+
     const input: any = { 
-      prompt: finalPrompt
+      prompt: finalPrompt,
+      safety_filter_level: "block_low_and_above",
+      allow_fallback_model: true
     };
 
-    if (model === "black-forest-labs/flux-2-pro") {
-      input.safety_tolerance = 2;
-      if (aspectRatio) {
-        input.aspect_ratio = aspectRatio;
-      }
-      if (resolution) {
-        if (resolution === "1K") input.resolution = "1 MP";
-        else if (resolution === "2K") input.resolution = "2 MP";
-        else if (resolution === "4K") input.resolution = "4 MP";
-        else input.resolution = resolution;
-      }
-      if (image || styleImage) {
-        input.input_images = [];
-        if (image) input.input_images.push(image);
-        if (styleImage) input.input_images.push(styleImage);
-        
-        if (!aspectRatio && image) {
-          input.aspect_ratio = "match_input_image";
-        }
-      }
-    } else {
-      input.safety_filter_level = "block_only_high";
-      input.allow_fallback_model = true;
-      if (aspectRatio) {
-        input.aspect_ratio = aspectRatio;
-      }
-      if (resolution) {
-        input.resolution = resolution;
-      }
-      if (image) {
-        input.image_input = [image];
-      }
-      if (styleImage) {
-        input.style_image = styleImage;
-      }
+    if (aspectRatio) {
+      input.aspect_ratio = aspectRatio;
+    }
+    if (resolution) {
+      input.resolution = resolution;
+    }
+    if (hasImage) {
+      input.image = inputImages[0];
+      input.image_input = inputImages;
     }
 
     const count = Math.min(Math.max(Number(numImages) || 1, 1), 4);
@@ -74,9 +54,12 @@ export default async function handler(req: any, res: any) {
     // Run sequentially to avoid rate limit bursts
     for (let i = 0; i < count; i++) {
       try {
-        const output = await replicate.run(model as `${string}/${string}`, { input });
+        console.log(`Running model google/nano-banana-pro for image ${i+1}...`);
+        const output = await replicate.run("google/nano-banana-pro", { input });
         results.push(output);
       } catch (err: any) {
+        console.error(`Error with model google/nano-banana-pro:`, err);
+        
         if (err.status === 429 && i > 0) {
           console.warn("Rate limit hit, returning partial results");
           break;
@@ -104,6 +87,12 @@ export default async function handler(req: any, res: any) {
     res.status(200).json({ outputs });
   } catch (error: any) {
     console.error("Error generating image:", error);
-    res.status(500).json({ error: error.message || "Failed to generate image" });
+    if (error.logs) {
+      console.log("Replicate logs:", error.logs);
+    }
+    res.status(500).json({ 
+      error: error.message || "Failed to generate image",
+      details: error.logs || null
+    });
   }
 }
