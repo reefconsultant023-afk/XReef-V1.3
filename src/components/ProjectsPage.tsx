@@ -161,7 +161,7 @@ export default function ProjectsPage() {
         <div className="flex justify-between items-center mb-12">
           <div>
             <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
-              مشاريع Xreef 1.5
+              مشاريع Xreef 1.6
             </h1>
             <p className="text-gray-400 mt-2">إدارة مشاريع توليد الصور بالذكاء الاصطناعي</p>
           </div>

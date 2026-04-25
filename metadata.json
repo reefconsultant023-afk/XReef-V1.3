@@ -1,5 +1,5 @@
 {
-  "name": "Xreef 1.5",
+  "name": "Xreef 1.6",
   "description": "A simple web app to generate images using Replicate API and google/nano-banana-pro model.",
   "requestFramePermissions": []
 }

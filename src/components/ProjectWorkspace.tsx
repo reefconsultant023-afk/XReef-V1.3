@@ -99,25 +99,6 @@ export default function ProjectWorkspace() {
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [enhancedPromptResult, setEnhancedPromptResult] = useState<string | null>(null);
 
-  // Style Selection State
-  const [selectedStyle, setSelectedStyle] = useState<string>("none");
-
-  const IMAGE_STYLES = [
-    { id: "none", name: "بدون ستايل", icon: "✨", prompt: "" },
-    { id: "cinematic", name: "سينمائي", icon: "🎬", prompt: "cinematic lighting, highly detailed, 8k, masterpiece, dramatic atmosphere, professional photography" },
-    { id: "anime", name: "أنمي", icon: "🌸", prompt: "anime style, vibrant colors, studio ghibli aesthetic, clean lines, high quality anime art" },
-    { id: "3d", name: "ثلاثي الأبعاد", icon: "🧊", prompt: "3D render, Unreal Engine 5, octane render, ray tracing, volumetric lighting, hyper-realistic, detailed textures" },
-    { id: "digital", name: "فن رقمي", icon: "🎨", prompt: "digital art, trending on artstation, sharp focus, intricate details, vibrant composition" },
-    { id: "cyberpunk", name: "سايبربانك", icon: "🌃", prompt: "cyberpunk aesthetic, neon lights, futuristic, rainy night, high tech, glowing elements" },
-    { id: "pixel", name: "بكسل آرت", icon: "👾", prompt: "pixel art style, 8-bit, 16-bit, retro game aesthetic, blocky, detailed pixel work" },
-    { id: "oil", name: "لوحة زيتية", icon: "🖼️", prompt: "oil painting style, heavy brushstrokes, canvas texture, artistic, masterpiece, rich colors" },
-    { id: "watercolor", name: "ألوان مائية", icon: "💧", prompt: "watercolor painting, soft edges, fluid colors, artistic, paper texture, elegant" },
-    { id: "disney", name: "ديزني / بيكسار", icon: "🐭", prompt: "disney pixar animation style, 3d character design, cute, vibrant, high quality 3d render" },
-    { id: "vintage", name: "قديم / كلاسيك", icon: "🎞️", prompt: "vintage photography, film grain, faded colors, nostalgic, 70s aesthetic, retro feel" },
-    { id: "sketch", name: "رسم يدوي", icon: "✏️", prompt: "pencil sketch, hand-drawn, charcoal art, artistic, rough strokes, detailed line art" },
-    { id: "fantasy", name: "خيالي", icon: "🧙", prompt: "fantasy world, ethereal, magical atmosphere, intricate details, epic scale, mythical" },
-  ];
-
   // Prompt Bank State
   const [isPromptBankOpen, setIsPromptBankOpen] = useState(false);
   const [promptBank, setPromptBank] = useState<any[]>([]);
@@ -581,19 +562,13 @@ export default function ProjectWorkspace() {
     setImageUrls([]);
 
     try {
-      let finalPromptToSend = prompt.trim();
-      const styleObj = IMAGE_STYLES.find(s => s.id === selectedStyle);
-      if (styleObj && styleObj.prompt) {
-        finalPromptToSend += `, ${styleObj.prompt}`;
-      }
-
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ 
-          prompt: finalPromptToSend, 
+          prompt: prompt.trim(), 
           images: imageFiles,
           aspectRatio,
           resolution,
@@ -809,19 +784,20 @@ export default function ProjectWorkspace() {
 
   if (!isAuthReady) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
       </div>
     );
   }
 
   return (
-    <div 
-      className="min-h-screen bg-cover bg-center bg-fixed relative flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8 font-sans" 
-      dir="rtl"
-      style={{ backgroundImage: "url('https://images.unsplash.com/photo-1774308667027-3ce5c579a518?q=80&w=2064&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')" }}
-    >
+    <div className="h-screen w-full bg-[#0a0a0a] text-neutral-200 flex flex-col font-sans overflow-hidden selection:bg-blue-500/30" dir="rtl">
+      {/* SVG Filters & Utilities */}
       <style>{`
+        .bg-dot-pattern {
+          background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+          background-size: 24px 24px;
+        }
         @keyframes scan {
           0% { top: 0%; opacity: 0; }
           10% { opacity: 1; }
@@ -831,13 +807,6 @@ export default function ProjectWorkspace() {
         .animate-scan {
           animation: scan 2.5s linear infinite;
         }
-        @keyframes pulse-ring {
-          0% { transform: scale(0.8); opacity: 0.5; }
-          100% { transform: scale(1.3); opacity: 0; }
-        }
-        .animate-pulse-ring {
-          animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-        }
         @keyframes shimmer {
           0% { background-position: 20px 0; }
           100% { background-position: 0 0; }
@@ -846,37 +815,36 @@ export default function ProjectWorkspace() {
 
       {/* Auth Modal */}
       {isAuthModalOpen && !user && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setIsAuthModalOpen(false)}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setIsAuthModalOpen(false)}>
           <div 
-            className="bg-gray-900/90 backdrop-blur-xl border border-blue-500/30 p-8 rounded-3xl shadow-2xl max-w-md w-full relative"
+            className="bg-[#111] border border-white/10 p-8 rounded-3xl shadow-2xl max-w-md w-full relative"
             onClick={(e) => e.stopPropagation()}
           >
             <button 
               onClick={() => setIsAuthModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-full p-2 transition-colors"
+              className="absolute top-4 right-4 text-neutral-500 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
             <div className="flex justify-center mb-6 mt-2">
-              <Sparkles className="w-12 h-12 text-blue-500" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <Sparkles className="w-8 h-8 text-white" />
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2 text-center">
-              تسجيل الدخول
-            </h2>
-            <p className="text-gray-400 text-center mb-8 text-sm">
-              يرجى استخدام حساب Google للمتابعة
-            </p>
+            <h2 className="text-2xl font-bold text-white mb-2 text-center tracking-tight">مرحباً بك في Xreef</h2>
+            <p className="text-neutral-400 text-center mb-8 text-sm">قم بتسجيل الدخول لحفظ مشاريعك وسجل توليدك</p>
 
             {authError && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl mb-6 text-sm">
-                {authError}
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl mb-6 text-sm flex items-center gap-2">
+                <X className="w-4 h-4 shrink-0" />
+                <span>{authError}</span>
               </div>
             )}
 
             <button 
               onClick={handleGoogleAuth} 
               disabled={isAuthLoading}
-              className="w-full bg-white hover:bg-gray-100 text-gray-900 font-bold py-4 rounded-xl transition-all flex justify-center items-center gap-3 shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+              className="w-full bg-white hover:bg-neutral-200 text-black font-bold py-3.5 rounded-xl transition-all flex justify-center items-center gap-3 shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
             >
               {isAuthLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
@@ -896,60 +864,24 @@ export default function ProjectWorkspace() {
 
       {/* Fullscreen Image Modal */}
       {selectedImage && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 sm:p-8"
-          onClick={() => setSelectedImage(null)}
-        >
-          <button 
-            className="absolute top-6 right-6 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-3 transition-all"
-            onClick={() => setSelectedImage(null)}
-          >
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/95 backdrop-blur-lg p-4 sm:p-8" onClick={() => setSelectedImage(null)}>
+          <button className="absolute top-6 right-6 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-3 transition-all backdrop-blur-md" onClick={() => setSelectedImage(null)}>
             <X className="w-6 h-6" />
           </button>
-          
-          <img 
-            src={selectedImage} 
-            alt="عرض النتيجة بحجم الشاشة" 
-            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
-          
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 flex-wrap justify-center w-full px-4" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => handleUseAsInput(selectedImage)}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-4 rounded-full font-bold transition-all shadow-lg hover:scale-105 border border-emerald-500"
-            >
-              <ImagePlus className="w-5 h-5" />
-              استخدام كمرجع
+          <img src={selectedImage} alt="عرض" className="max-w-full max-h-full object-contain rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 flex-wrap justify-center w-full px-4" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => handleUseAsInput(selectedImage)} className="flex items-center gap-2 bg-neutral-900/80 hover:bg-neutral-800 text-white px-5 py-3 rounded-full font-medium transition-all shadow-xl border border-white/10 backdrop-blur-md">
+               <ImagePlus className="w-4 h-4" /> كمرجع
             </button>
-            <button
-              onClick={() => handleUpscale(selectedImage)}
-              disabled={isUpscaling === selectedImage}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-6 py-4 rounded-full font-bold transition-all shadow-lg hover:scale-105 border border-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isUpscaling === selectedImage ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Zap className="w-5 h-5" />
-              )}
-              {isUpscaling === selectedImage ? "جاري التكبير..." : "تكبير الدقة"}
+            <button onClick={() => handleUpscale(selectedImage)} disabled={isUpscaling === selectedImage} className="flex items-center gap-2 bg-neutral-900/80 hover:bg-neutral-800 text-white px-5 py-3 rounded-full font-medium transition-all shadow-xl border border-white/10 backdrop-blur-md disabled:opacity-50">
+               {isUpscaling === selectedImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+               تكبير الدقة
             </button>
-            <button
-              onClick={() => {
-                setSelectedImage(null);
-                openCropModal(selectedImage);
-              }}
-              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-6 py-4 rounded-full font-bold transition-all shadow-lg hover:scale-105 border border-gray-600"
-            >
-              <Crop className="w-5 h-5" />
-              قص
+            <button onClick={() => { setSelectedImage(null); openCropModal(selectedImage); }} className="flex items-center gap-2 bg-neutral-900/80 hover:bg-neutral-800 text-white px-5 py-3 rounded-full font-medium transition-all shadow-xl border border-white/10 backdrop-blur-md">
+               <Crop className="w-4 h-4" /> قص
             </button>
-            <button
-              onClick={() => handleDownload(selectedImage)}
-              className="flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-bold transition-all shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:scale-105"
-            >
-              <Download className="w-5 h-5" />
-              تنزيل الصورة
+            <button onClick={() => handleDownload(selectedImage)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-full font-medium transition-all shadow-xl border border-blue-500/50 backdrop-blur-md">
+               <Download className="w-5 h-5" /> تنزيل
             </button>
           </div>
         </div>
@@ -957,779 +889,102 @@ export default function ProjectWorkspace() {
 
       {/* Cropping Modal */}
       {imageToCrop && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 sm:p-8">
-          <button 
-            className="absolute top-6 right-6 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-3 transition-all z-10"
-            onClick={closeCropModal}
-          >
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 sm:p-8">
+          <button className="absolute top-6 right-6 text-white/50 hover:text-white bg-white/10 rounded-full p-3 transition-all z-10" onClick={closeCropModal}>
             <X className="w-6 h-6" />
           </button>
-          
           <div className="flex flex-col items-center justify-center max-h-full max-w-full w-full">
-            <h3 className="text-white text-xl font-bold mb-4 drop-shadow-md">قص الصورة</h3>
-            <div className="overflow-auto max-h-[70vh] max-w-full bg-black/50 rounded-xl border border-blue-500/30 p-2 shadow-2xl">
-              <ReactCrop 
-                crop={crop} 
-                onChange={(_, percentCrop) => setCrop(percentCrop)}
-                onComplete={(c) => setCompletedCrop(c)}
-                className="max-h-[65vh]"
-              >
-                <img 
-                  ref={imgRef}
-                  src={imageToCrop} 
-                  alt="قص الصورة" 
-                  className="max-h-[65vh] w-auto object-contain"
-                />
+            <h3 className="text-white text-xl font-bold mb-6 tracking-tight">قص وتعديل الصورة</h3>
+            <div className="overflow-auto max-h-[65vh] max-w-full bg-neutral-900/50 rounded-2xl border border-white/10 p-2 shadow-2xl">
+              <ReactCrop crop={crop} onChange={(_, percentCrop) => setCrop(percentCrop)} onComplete={(c) => setCompletedCrop(c)}>
+                <img ref={imgRef} src={imageToCrop} alt="قص الصورة" className="max-h-[60vh] w-auto object-contain rounded-xl" />
               </ReactCrop>
             </div>
-            
-            <div className="mt-8 flex gap-4">
-              <button
-                onClick={closeCropModal}
-                className="px-8 py-3 rounded-full font-bold text-white bg-gray-700 hover:bg-gray-600 transition-all border border-gray-500"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleSaveCrop}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-full font-bold transition-all shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:scale-105"
-              >
-                <Download className="w-5 h-5" />
-                حفظ وتنزيل
+            <div className="mt-8 flex gap-3">
+              <button onClick={closeCropModal} className="px-6 py-2.5 rounded-xl font-medium text-white bg-neutral-800 hover:bg-neutral-700 transition-all border border-white/10">إلغاء</button>
+              <button onClick={handleSaveCrop} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-lg">
+                <Download className="w-4 h-4" /> حفظ الصورة المخصوصة
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Dark Overlay for better readability - Black theme */}
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
-
-      {/* Main Content */}
-      <div className="relative z-10 max-w-6xl w-full space-y-10">
-        
-        {/* Header */}
-        <div className="flex flex-col items-center space-y-4 relative">
-          <div className="absolute left-0 top-0 flex gap-2">
-            <button 
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white px-4 py-2 rounded-xl transition-all border border-white/10 backdrop-blur-sm"
-            >
-              <ArrowLeft size={18} />
-              <span className="hidden sm:inline">الرجوع للمشاريع</span>
-            </button>
-            <button 
-              onClick={() => navigate('/support')}
-              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white px-4 py-2 rounded-xl transition-all border border-white/10 backdrop-blur-sm"
-            >
-              <LifeBuoy size={18} />
-              <span className="hidden sm:inline">الدعم الفني</span>
-            </button>
-          </div>
-          <div className="absolute right-0 top-0">
-            {user ? (
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  {user.photoURL && <img src={user.photoURL} alt="المستخدم" className="w-8 h-8 rounded-full border border-blue-500/30" />}
-                  <span className="text-sm text-gray-300 hidden sm:inline-block">{user.displayName}</span>
-                </div>
-                <button
-                  onClick={logOut}
-                  className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-full text-sm font-medium transition-colors border border-red-500/20"
-                >
-                  <LogOut className="w-4 h-4" />
-                  تسجيل الخروج
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => {
-                  setAuthError(null);
-                  setIsAuthModalOpen(true);
-                }}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg hover:scale-105"
-              >
-                <LogIn className="w-4 h-4" />
-                تسجيل الدخول لحفظ بياناتك
-              </button>
-            )}
-          </div>
-
-          {projectName && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center gap-2 mt-16 sm:mt-0"
-            >
-              <div className="bg-blue-500/10 border border-blue-500/30 px-6 py-2 rounded-full backdrop-blur-md flex items-center gap-3">
-                <Folder className="w-4 h-4 text-blue-400" />
-                <span className="text-blue-400 font-bold text-lg">مشروع: {projectName}</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-400 text-sm bg-black/40 px-4 py-1 rounded-full border border-white/5">
-                <Zap size={14} className="text-yellow-500" />
-                <span>تم استهلاك <span className="text-white font-bold">{history.length}</span> مرة توليد صورة</span>
-              </div>
-            </motion.div>
-          )}
-
-          <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600 tracking-tight flex items-center justify-center gap-4 drop-shadow-lg">
-            <Sparkles className="w-12 h-12 text-blue-500" />
-            Xreef 1.5
-          </h1>
-          
-          <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto font-light text-center">
-            أطلق العنان لخيالك. قم بتوليد وتعديل الصور باستخدام أحدث تقنيات الذكاء الاصطناعي.
-          </p>
-        </div>
-
-        {/* Glassmorphism Card */}
-        <div className="bg-black/40 backdrop-blur-xl border border-blue-500/20 p-6 md:p-10 rounded-[2.5rem] shadow-2xl grid grid-cols-1 lg:grid-cols-2 gap-10">
-          
-          {/* Left Column: Controls */}
-          <div className="space-y-8 flex flex-col">
-            <form onSubmit={handleGenerate} className="flex flex-col flex-grow space-y-6">
-              
-              {/* Prompt Input */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between ml-1">
-                  <label htmlFor="prompt" className="block text-sm font-medium text-gray-200">
-                    ماذا تريد أن ترسم اليوم؟
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setIsPromptBankOpen(true)}
-                    className="flex items-center gap-1.5 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-full border border-blue-500/20"
-                  >
-                    <Library className="w-3.5 h-3.5" />
-                    بنك الأوصاف
-                  </button>
-                </div>
-                <textarea
-                  id="prompt"
-                  name="prompt"
-                  rows={8}
-                  className="appearance-none rounded-3xl relative block w-full px-6 py-4 bg-black/60 border border-blue-500/20 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-base resize-none transition-all shadow-inner min-h-[150px]"
-                  placeholder="مثال: مدينة مستقبلية مضيئة بالنيون تحت المطر، ألوان سينمائية..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  disabled={isLoading || isEnhancingPrompt}
-                />
-                <div className="flex justify-end mt-2">
-                  <button
-                    type="button"
-                    onClick={handleEnhancePrompt}
-                    disabled={!prompt.trim() || isEnhancingPrompt || isLoading}
-                    className="flex items-center gap-2 text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors bg-purple-500/10 hover:bg-purple-500/20 px-4 py-2 rounded-full border border-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isEnhancingPrompt ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-                        جاري الترجمة...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-4 h-4" />
-                        ترجمة الوصف (Gemini Pro 3.1)
-                      </>
-                    )}
-                  </button>
-                </div>
-                
-                {/* Enhanced Prompt Result Box */}
-                {enhancedPromptResult && (
-                  <div className="mt-4 p-5 bg-purple-900/20 border border-purple-500/30 rounded-2xl shadow-inner animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-bold text-purple-300 flex items-center gap-2">
-                        <Wand2 className="w-4 h-4" />
-                        نتيجة الترجمة (Gemini Pro 3.1)
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPrompt(enhancedPromptResult);
-                            setEnhancedPromptResult(null);
-                          }}
-                          className="text-xs font-medium bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-full transition-colors shadow-md"
-                        >
-                          استخدام هذا الوصف
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEnhancedPromptResult(null)}
-                          className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-800 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-sm text-purple-100/90 leading-relaxed" dir="ltr">
-                      {enhancedPromptResult}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Advanced Settings (Always Visible) */}
-              <div className="space-y-5 p-5 bg-black/40 border border-blue-500/20 rounded-3xl shadow-inner">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Aspect Ratio */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-medium text-gray-400">
-                      أبعاد الصورة
-                    </label>
-                    <select
-                      value={aspectRatio}
-                      onChange={(e) => setAspectRatio(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-black/60 border border-blue-500/20 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
-                    >
-                      <option value="1:1">مربع (1:1)</option>
-                      <option value="16:9">شاشة عريضة (16:9)</option>
-                      <option value="9:16">طولي (9:16)</option>
-                      <option value="4:3">أفقي (4:3)</option>
-                      <option value="3:4">عمودي (3:4)</option>
-                    </select>
-                  </div>
-
-                  {/* Resolution */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-medium text-gray-400">
-                      الدقة (Resolution)
-                    </label>
-                    <select
-                      value={resolution}
-                      onChange={(e) => setResolution(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-black/60 border border-blue-500/20 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
-                    >
-                      <option value="1K">عادي (1K)</option>
-                      <option value="2K">عالي (2K)</option>
-                      <option value="4K">فائق (4K)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Image Upload */}
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-200 ml-1">
-                    صورة مرجعية (اختياري)
-                  </label>
-                  {imageFiles.length > 0 ? (
-                    <div className="relative inline-block group w-full">
-                      <img src={imageFiles[0]} alt="معاينة" className="h-32 w-full object-cover rounded-2xl border border-blue-500/30 shadow-xl" />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(0)}
-                        className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white p-2 rounded-full backdrop-blur-md transition-colors shadow-lg"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-blue-500/20 border-dashed rounded-2xl hover:border-blue-500 hover:bg-blue-900/10 cursor-pointer transition-all group bg-black/40"
-                    >
-                      <Upload className="h-8 w-8 text-blue-500/50 group-hover:text-blue-400 transition-colors mb-2" />
-                      <span className="text-sm text-gray-400 group-hover:text-gray-300">اضغط لرفع صورة مرجعية</span>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageUpload}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                </div>
-              </div>
-
-              {/* Style Selector */}
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-200 ml-1">
-                  اختر ستايل الصورة
-                </label>
-                <div className="flex overflow-x-auto pb-2 gap-3 scrollbar-hide -mx-1 px-1">
-                  {IMAGE_STYLES.map((style) => (
-                    <button
-                      key={style.id}
-                      type="button"
-                      onClick={() => setSelectedStyle(style.id)}
-                      className={`flex-shrink-0 flex flex-col items-center justify-center w-24 h-24 rounded-2xl border transition-all duration-300 ${
-                        selectedStyle === style.id
-                          ? 'bg-blue-600/30 border-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.3)]'
-                          : 'bg-black/40 border-white/10 hover:border-white/30'
-                      }`}
-                    >
-                      <span className="text-2xl mb-1">{style.icon}</span>
-                      <span className={`text-[10px] font-bold ${selectedStyle === style.id ? 'text-white' : 'text-gray-400'}`}>
-                        {style.name}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-2 mt-auto">
-                <button
-                  type="submit"
-                  disabled={isLoading || !prompt.trim()}
-                  className={`group relative w-full flex justify-center py-4 px-4 border border-transparent text-lg font-bold rounded-3xl text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ${
-                    isLoading 
-                      ? 'bg-blue-900/80 shadow-[0_0_30px_-5px_rgba(37,99,235,0.4)]' 
-                      : 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] hover:shadow-[0_0_60px_-15px_rgba(37,99,235,0.7)]'
-                  }`}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center gap-3">
-                      <div className="relative flex items-center justify-center w-6 h-6">
-                        <div className="absolute w-full h-full border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                      </div>
-                      جاري الإبداع...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-3">
-                      <Sparkles className="w-6 h-6" />
-                      توليد الصورة
-                    </span>
-                  )}
-                </button>
-              </div>
-            </form>
-
-            {/* Error Message */}
-            {error && (
-              <div className="rounded-2xl bg-red-500/10 p-5 border border-red-500/20 backdrop-blur-md">
-                <div className="flex items-start">
-                  <div className="ml-3">
-                    <h3 className="text-sm font-bold text-red-400">حدث خطأ</h3>
-                    <div className="mt-2 text-sm text-red-300/90 leading-relaxed">
-                      <p>{error}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column: Result Area */}
-          <div className="flex flex-col h-full">
-            <div className="flex-grow rounded-[2rem] border border-blue-500/20 bg-black/60 overflow-hidden min-h-[400px] lg:min-h-[600px] flex items-center justify-center relative shadow-inner group">
-              
-              {/* Loading Overlay */}
-              {isLoading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xl z-30 overflow-hidden transition-all duration-500">
-                  {/* Diffusion Noise Simulation */}
-                  <div 
-                    className="absolute inset-0 mix-blend-overlay transition-all duration-200"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-                      transform: `scale(${1 + (progress / 100) * 0.5})`,
-                      opacity: Math.max(0, 0.4 - (progress / 100) * 0.4)
-                    }}
-                  ></div>
-
-                  {/* Background Glow */}
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.15)_0%,transparent_60%)] animate-pulse"></div>
-                  
-                  {/* Scanning Laser */}
-                  <div className="absolute left-0 right-0 h-[2px] bg-blue-400 shadow-[0_0_20px_5px_rgba(59,130,246,0.6)] animate-scan z-0"></div>
-
-                  <div className="relative flex items-center justify-center mb-8 z-10">
-                    <div className="absolute w-24 h-24 border-t-2 border-r-2 border-blue-500 rounded-full animate-spin"></div>
-                    <div className="absolute w-16 h-16 border-b-2 border-l-2 border-blue-300 rounded-full animate-[spin_1.5s_linear_infinite_reverse]"></div>
-                    <div className="absolute w-24 h-24 border-2 border-blue-500/20 rounded-full animate-pulse-ring"></div>
-                    <Sparkles className="w-8 h-8 text-blue-400 animate-pulse" />
-                  </div>
-
-                  <div className="relative z-10 flex flex-col items-center gap-3 w-full max-w-xs sm:max-w-sm px-4">
-                    <h3 className="text-lg md:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200 animate-pulse tracking-wide text-center">
-                      {loadingText}
-                    </h3>
-                    
-                    {/* Progress Bar */}
-                    <div className="w-full h-2.5 bg-gray-900/80 rounded-full mt-4 overflow-hidden border border-blue-500/30 shadow-inner">
-                      <div 
-                        className="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300 ease-out relative"
-                        style={{ width: `${progress}%` }}
-                      >
-                        <div className="absolute top-0 right-0 bottom-0 left-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%,transparent_100%)] bg-[length:10px_10px] animate-[shimmer_1s_linear_infinite]"></div>
-                      </div>
-                    </div>
-                    <div className="flex justify-between w-full text-xs text-blue-300/70 mt-1 font-mono">
-                      <span>{progress}%</span>
-                      <span className="flex items-center gap-1">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        جاري المعالجة
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Image Display */}
-              {imageUrls.length > 0 ? (
-                <div className={`w-full h-full p-4 ${imageUrls.length > 1 ? 'grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto' : 'flex items-center justify-center'}`}>
-                  {imageUrls.map((url, index) => (
-                    <div key={index} className="relative group w-full h-full flex items-center justify-center bg-black/40 rounded-2xl overflow-hidden border border-blue-500/10 min-h-[300px]">
-                      <img
-                        src={url}
-                        alt={`النتيجة المولدة ${index + 1}`}
-                        className={`object-contain ${imageUrls.length > 1 ? 'max-h-[400px]' : 'w-full h-full'}`}
-                        referrerPolicy="no-referrer"
-                      />
-                      {/* Desktop Action Buttons (Hover Reveal) */}
-                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 px-2 flex-wrap">
-                        <button
-                          onClick={() => handleUseAsInput(url)}
-                          className="flex items-center gap-1.5 bg-emerald-600/80 hover:bg-emerald-500 backdrop-blur-xl border border-emerald-500/50 text-white px-3 py-2 rounded-full font-bold transition-all shadow-[0_8px_30px_rgb(0,0,0,0.5)] hover:scale-105 text-xs sm:text-sm"
-                        >
-                          <ImagePlus className="w-4 h-4" />
-                          كمرجع
-                        </button>
-                        <button
-                          onClick={() => handleUpscale(url)}
-                          disabled={isUpscaling === url}
-                          className="flex items-center gap-1.5 bg-purple-600/80 hover:bg-purple-500 backdrop-blur-xl border border-purple-500/50 text-white px-3 py-2 rounded-full font-bold transition-all shadow-[0_8px_30px_rgb(0,0,0,0.5)] hover:scale-105 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUpscaling === url ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                          تكبير
-                        </button>
-                        <button
-                          onClick={() => setSelectedImage(url)}
-                          className="flex items-center gap-1.5 bg-black/60 hover:bg-blue-600/80 backdrop-blur-xl border border-blue-500/50 text-white px-3 py-2 rounded-full font-bold transition-all shadow-[0_8px_30px_rgb(0,0,0,0.5)] hover:scale-105 text-xs sm:text-sm"
-                        >
-                          <Maximize2 className="w-4 h-4" />
-                          عرض
-                        </button>
-                        <button
-                          onClick={() => openCropModal(url)}
-                          className="flex items-center gap-1.5 bg-black/60 hover:bg-blue-600/80 backdrop-blur-xl border border-blue-500/50 text-white px-3 py-2 rounded-full font-bold transition-all shadow-[0_8px_30px_rgb(0,0,0,0.5)] hover:scale-105 text-xs sm:text-sm"
-                        >
-                          <Crop className="w-4 h-4" />
-                          قص
-                        </button>
-                        <button
-                          onClick={() => handleDownload(url)}
-                          className="flex items-center gap-1.5 bg-blue-600/80 hover:bg-blue-500 backdrop-blur-xl border border-blue-400/50 text-white px-3 py-2 rounded-full font-bold transition-all shadow-[0_8px_30px_rgb(0,0,0,0.5)] hover:scale-105 text-xs sm:text-sm"
-                        >
-                          <Download className="w-4 h-4" />
-                          تنزيل
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                /* Empty State */
-                <div className="text-center text-blue-500/40 flex flex-col items-center gap-5 p-8">
-                  <div className="w-24 h-24 rounded-full bg-blue-500/5 flex items-center justify-center mb-2 shadow-inner border border-blue-500/10">
-                    <ImageIcon className="w-12 h-12 opacity-50" />
-                  </div>
-                  <p className="text-xl font-medium text-blue-200/70">مساحة العرض</p>
-                  <p className="text-sm opacity-60 max-w-xs leading-relaxed text-blue-200/50">
-                    أدخل وصفاً واضغط على زر التوليد لترى السحر يتحقق هنا
-                  </p>
-                </div>
-              )}
-            </div>
-            
-            {/* Mobile Action Buttons (Always visible on small screens when image exists) */}
-            {imageUrls.length === 1 && (
-              <div className="mt-6 lg:hidden grid grid-cols-2 sm:grid-cols-5 gap-3">
-                <button
-                  onClick={() => handleUseAsInput(imageUrls[0])}
-                  className="w-full flex items-center justify-center gap-2 bg-emerald-600/40 hover:bg-emerald-600/60 backdrop-blur-md border border-emerald-500/30 text-white px-3 py-3 rounded-2xl font-bold transition-all active:scale-95 text-sm"
-                >
-                  <ImagePlus className="w-4 h-4" />
-                  كمرجع
-                </button>
-                <button
-                  onClick={() => handleUpscale(imageUrls[0])}
-                  disabled={isUpscaling === imageUrls[0]}
-                  className="w-full flex items-center justify-center gap-2 bg-purple-600/40 hover:bg-purple-600/60 backdrop-blur-md border border-purple-500/30 text-white px-3 py-3 rounded-2xl font-bold transition-all active:scale-95 text-sm disabled:opacity-50"
-                >
-                  {isUpscaling === imageUrls[0] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                  تكبير
-                </button>
-                <button
-                  onClick={() => setSelectedImage(imageUrls[0])}
-                  className="w-full flex items-center justify-center gap-2 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-blue-500/30 text-white px-3 py-3 rounded-2xl font-bold transition-all active:scale-95 text-sm"
-                >
-                  <Maximize2 className="w-4 h-4" />
-                  عرض
-                </button>
-                <button
-                  onClick={() => openCropModal(imageUrls[0])}
-                  className="w-full flex items-center justify-center gap-2 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-blue-500/30 text-white px-3 py-3 rounded-2xl font-bold transition-all active:scale-95 text-sm"
-                >
-                  <Crop className="w-4 h-4" />
-                  قص
-                </button>
-                <button
-                  onClick={() => handleDownload(imageUrls[0])}
-                  className="w-full flex items-center justify-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 backdrop-blur-md border border-blue-500/30 text-white px-3 py-3 rounded-2xl font-bold transition-all active:scale-95 text-sm"
-                >
-                  <Download className="w-4 h-4" />
-                  تنزيل
-                </button>
-                <button
-                  onClick={() => openTemplateModal(imageUrls[0])}
-                  className="w-full flex items-center justify-center gap-2 bg-indigo-600/20 hover:bg-indigo-600/40 backdrop-blur-md border border-indigo-500/30 text-white px-3 py-3 rounded-2xl font-bold transition-all active:scale-95 text-sm"
-                >
-                  <LayoutTemplate className="w-4 h-4" />
-                  في قالب
-                </button>
-              </div>
-            )}
-          </div>
-
-        </div>
-
-        {/* History Section */}
-        {history.length > 0 && (
-          <div className="bg-black/40 backdrop-blur-xl border border-blue-500/20 p-6 md:p-10 rounded-[2.5rem] shadow-2xl mt-10">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                <Clock className="w-6 h-6 text-blue-400" />
-                سجل الصور السابقة
-              </h2>
-              <button 
-                onClick={async () => {
-                  if (user) {
-                    try {
-                      for (const item of history) {
-                        await deleteDoc(doc(db, `users/${user.uid}/projects/${projectId}/history`, item.id));
-                      }
-                    } catch (err) {
-                      handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/projects/${projectId}/history`);
-                    }
-                  } else {
-                    setHistory([]);
-                    localStorage.removeItem(`xreef_history_${projectId}`);
-                  }
-                }} 
-                className="text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-xl flex items-center gap-2 text-sm transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-                مسح السجل
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {history.map((item) => (
-                <div key={item.id} className="relative group rounded-2xl overflow-hidden border border-blue-500/20 aspect-square bg-black/60 shadow-lg">
-                  <img 
-                    src={item.url} 
-                    alt={item.prompt} 
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                    referrerPolicy="no-referrer"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                    <p className="text-xs text-blue-100 line-clamp-3 mb-3 leading-relaxed" dir="rtl">{item.prompt}</p>
-                    <div className="flex justify-center gap-2 flex-wrap">
-                      <button 
-                        onClick={() => handleUseAsInput(item.url)} 
-                        className="bg-emerald-600/80 hover:bg-emerald-500 text-white p-2.5 rounded-full backdrop-blur-md transition-colors"
-                        title="استخدام كمرجع"
-                      >
-                        <ImagePlus className="w-4 h-4"/>
-                      </button>
-                      <button 
-                        onClick={() => handleUpscale(item.url)} 
-                        disabled={isUpscaling === item.url}
-                        className="bg-purple-600/80 hover:bg-purple-500 text-white p-2.5 rounded-full backdrop-blur-md transition-colors disabled:opacity-50"
-                        title="تكبير الدقة"
-                      >
-                        {isUpscaling === item.url ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4"/>}
-                      </button>
-                      <button 
-                        onClick={() => setSelectedImage(item.url)} 
-                        className="bg-blue-600/80 hover:bg-blue-500 text-white p-2.5 rounded-full backdrop-blur-md transition-colors"
-                        title="عرض"
-                      >
-                        <Maximize2 className="w-4 h-4"/>
-                      </button>
-                      <button 
-                        onClick={() => openCropModal(item.url)} 
-                        className="bg-gray-700/80 hover:bg-gray-600 text-white p-2.5 rounded-full backdrop-blur-md transition-colors"
-                        title="قص"
-                      >
-                        <Crop className="w-4 h-4"/>
-                      </button>
-                      <button 
-                        onClick={() => handleDownload(item.url)} 
-                        className="bg-blue-600/80 hover:bg-blue-500 text-white p-2.5 rounded-full backdrop-blur-md transition-colors"
-                        title="تنزيل"
-                      >
-                        <Download className="w-4 h-4"/>
-                      </button>
-                      <button 
-                        onClick={() => openTemplateModal(item.url)} 
-                        className="bg-indigo-600/80 hover:bg-indigo-500 text-white p-2.5 rounded-full backdrop-blur-md transition-colors"
-                        title="تنزيل في قالب"
-                      >
-                        <LayoutTemplate className="w-4 h-4"/>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Prompt Bank Modal */}
       {isPromptBankOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-8" onClick={() => setIsPromptBankOpen(false)}>
-          <div 
-            className="bg-gray-900 border border-blue-500/30 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-800 bg-black/20">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 sm:p-8" onClick={() => setIsPromptBankOpen(false)}>
+          <div className="bg-[#111] border border-white/10 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/[0.02]">
               <div className="flex items-center gap-4">
-                <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                  <Library className="w-6 h-6 text-blue-400" />
-                  بنك الأوصاف (Prompt Bank)
-                </h3>
-                <button
-                  onClick={() => setIsPromptBankEditMode(!isPromptBankEditMode)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    isPromptBankEditMode 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
-                  }`}
-                >
-                  <Edit2 className="w-4 h-4" />
-                  {isPromptBankEditMode ? 'إنهاء التعديل' : 'تعديل'}
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                  <Library className="w-5 h-5 text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white tracking-tight">مكتبة الأوصاف</h3>
+                <button onClick={() => setIsPromptBankEditMode(!isPromptBankEditMode)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ml-4 ${isPromptBankEditMode ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'bg-white/5 text-neutral-400 hover:text-white border border-transparent'}`}>
+                  <Edit2 className="w-3.5 h-3.5" />
+                  {isPromptBankEditMode ? 'إنهاء التعديل' : 'تعديل المكتبة'}
                 </button>
               </div>
-              <button 
-                onClick={() => setIsPromptBankOpen(false)}
-                className="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-full p-2 transition-colors"
-              >
+              <button onClick={() => setIsPromptBankOpen(false)} className="text-neutral-500 hover:text-white bg-white/5 rounded-full p-2 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            {/* Content */}
-            <div className="overflow-y-auto p-6 space-y-8 custom-scrollbar">
+            <div className="overflow-y-auto p-6 space-y-10 custom-scrollbar relative">
               {promptBank.map((category, idx) => (
                 <div key={idx} className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-gray-800 pb-2">
-                    <h4 className="text-lg font-semibold text-blue-300 flex items-center gap-2">
-                      {category.category}
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-base font-semibold text-neutral-300 flex items-center gap-2">
+                       <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                       {category.category}
                     </h4>
                     {isPromptBankEditMode && (
-                      <button
-                        onClick={() => handleDeleteCategory(idx)}
-                        className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
-                        title="حذف التصنيف"
-                      >
+                      <button onClick={() => handleDeleteCategory(idx)} className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors" title="حذف التصنيف">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {category.prompts.map((p, pIdx) => (
-                      <div key={pIdx} className="relative group flex flex-col">
-                        <button
-                          onClick={() => {
-                            if (isPromptBankEditMode) return;
-                            setPrompt(p.prompt);
-                            setIsPromptBankOpen(false);
-                          }}
-                          className={`flex flex-col items-start text-right p-4 rounded-2xl bg-gray-800/50 border transition-all h-full ${
-                            isPromptBankEditMode 
-                              ? 'border-gray-700 cursor-default' 
-                              : 'hover:bg-blue-900/30 border-gray-700 hover:border-blue-500/50 cursor-pointer'
-                          }`}
-                        >
-                          <span className="font-bold text-gray-200 group-hover:text-blue-300 mb-2 pr-8">{p.title}</span>
-                          <span className="text-xs text-gray-400 line-clamp-3 leading-relaxed" dir="ltr">{p.prompt}</span>
+                      <div key={pIdx} className="relative group flex flex-col h-full">
+                        <button onClick={() => { if (!isPromptBankEditMode) { setPrompt(p.prompt); setIsPromptBankOpen(false); } }} className={`flex flex-col items-start text-right p-4 rounded-2xl bg-neutral-900 border transition-all h-full ${isPromptBankEditMode ? 'border-white/5 cursor-default' : 'hover:bg-neutral-800 border-white/5 hover:border-blue-500/30 cursor-pointer'}`}>
+                          <span className="font-semibold text-sm text-neutral-200 group-hover:text-blue-300 mb-2 pr-6">{p.title}</span>
+                          <span className="text-[11px] text-neutral-500 line-clamp-3 leading-relaxed" dir="ltr">{p.prompt}</span>
                         </button>
-                        
                         {isPromptBankEditMode && (
-                          <div className="absolute top-3 right-3 flex items-center gap-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingPrompt({ catIdx: idx, promptIdx: pIdx, title: p.title, prompt: p.prompt });
-                              }}
-                              className="p-1.5 text-gray-400 hover:text-blue-400 bg-gray-900 rounded-lg border border-gray-700 hover:border-blue-500/50 transition-colors"
-                            >
+                          <div className="absolute top-3 right-3 flex items-center gap-1 bg-neutral-900 rounded-lg p-1 border border-white/5 shadow-lg">
+                            <button onClick={(e) => { e.stopPropagation(); setEditingPrompt({ catIdx: idx, promptIdx: pIdx, title: p.title, prompt: p.prompt }); }} className="p-1 text-neutral-400 hover:text-blue-400 transition-colors">
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeletePrompt(idx, pIdx);
-                              }}
-                              className="p-1.5 text-gray-400 hover:text-red-400 bg-gray-900 rounded-lg border border-gray-700 hover:border-red-500/50 transition-colors"
-                            >
+                            <button onClick={(e) => { e.stopPropagation(); handleDeletePrompt(idx, pIdx); }} className="p-1 text-neutral-400 hover:text-red-400 transition-colors">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         )}
                       </div>
                     ))}
-                    
-                    {/* Add Prompt Button */}
                     {isPromptBankEditMode && (
-                      <button
-                        onClick={() => setEditingPrompt({ catIdx: idx, promptIdx: -1, title: "", prompt: "" })}
-                        className="flex flex-col items-center justify-center text-center p-4 rounded-2xl bg-gray-800/20 hover:bg-gray-800/50 border border-dashed border-gray-700 hover:border-blue-500/50 transition-all text-gray-400 hover:text-blue-400 min-h-[120px]"
-                      >
-                        <Plus className="w-6 h-6 mb-2" />
-                        <span className="text-sm font-medium">إضافة وصف جديد</span>
+                      <button onClick={() => setEditingPrompt({ catIdx: idx, promptIdx: -1, title: "", prompt: "" })} className="flex flex-col items-center justify-center text-center p-4 rounded-2xl bg-neutral-900/50 hover:bg-neutral-800 border border-dashed border-white/10 hover:border-blue-500/30 transition-all text-neutral-500 hover:text-blue-400 min-h-[100px]">
+                        <Plus className="w-5 h-5 mb-1" />
+                        <span className="text-[11px] font-medium">إضافة نص</span>
                       </button>
                     )}
                   </div>
                 </div>
               ))}
-
-              {/* Add Category Section */}
+              
               {isPromptBankEditMode && (
-                <div className="pt-6 border-t border-gray-800">
+                <div className="pt-8 border-t border-white/5">
                   {isAddingCategory ? (
-                    <div className="flex items-center gap-3 bg-gray-800/50 p-4 rounded-2xl border border-gray-700">
-                      <input
-                        type="text"
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        placeholder="اسم التصنيف الجديد..."
-                        className="flex-1 bg-black/50 border border-gray-600 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-                        autoFocus
-                      />
-                      <button
-                        onClick={handleAddCategory}
-                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-medium transition-colors"
-                      >
-                        إضافة
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsAddingCategory(false);
-                          setNewCategoryName("");
-                        }}
-                        className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-xl font-medium transition-colors"
-                      >
-                        إلغاء
-                      </button>
+                    <div className="flex items-center gap-3 bg-neutral-900 p-3 rounded-2xl border border-white/10">
+                      <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="اسم القسم الجديد..." className="flex-1 bg-transparent border-none text-white focus:outline-none text-sm px-2" autoFocus />
+                      <button onClick={handleAddCategory} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-xl text-sm font-medium transition-colors">إضافة</button>
+                      <button onClick={() => { setIsAddingCategory(false); setNewCategoryName(""); }} className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-1.5 rounded-xl text-sm font-medium transition-colors">إلغاء</button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => setIsAddingCategory(true)}
-                      className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-gray-800/20 hover:bg-gray-800/50 border border-dashed border-gray-700 hover:border-blue-500/50 transition-all text-gray-400 hover:text-blue-400"
-                    >
+                    <button onClick={() => setIsAddingCategory(true)} className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-neutral-900/50 hover:bg-neutral-800 border border-dashed border-white/10 hover:border-blue-500/30 transition-all text-neutral-500 hover:text-blue-400">
                       <Plus className="w-5 h-5" />
-                      <span className="font-medium">إضافة تصنيف جديد</span>
+                      <span className="text-sm font-medium">إضافة قسم جديد</span>
                     </button>
                   )}
                 </div>
@@ -1739,57 +994,28 @@ export default function ProjectWorkspace() {
         </div>
       )}
 
-      {/* Edit/Add Prompt Modal */}
+      {/* Edit Prompt Modal inside Prompt Bank */}
       {editingPrompt && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setEditingPrompt(null)}>
-          <div 
-            className="bg-gray-900 border border-blue-500/30 rounded-3xl shadow-2xl w-full max-w-lg p-6 space-y-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-xl font-bold text-white flex items-center gap-2 border-b border-gray-800 pb-4">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setEditingPrompt(null)}>
+          <div className="bg-[#111] border border-white/10 rounded-3xl shadow-2xl w-full max-w-lg p-6 space-y-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-white flex items-center gap-2 pb-4 border-b border-white/5">
               <Edit2 className="w-5 h-5 text-blue-400" />
-              {editingPrompt.promptIdx === -1 ? 'إضافة وصف جديد' : 'تعديل الوصف'}
+              {editingPrompt.promptIdx === -1 ? 'إضافة نص للمكتبة' : 'تعديل النص'}
             </h3>
-            
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">عنوان الوصف</label>
-                <input
-                  type="text"
-                  value={editingPrompt.title}
-                  onChange={(e) => setEditingPrompt({...editingPrompt, title: e.target.value})}
-                  placeholder="مثال: مدينة مستقبلية"
-                  className="w-full bg-black/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                />
+                <label className="block text-xs font-medium text-neutral-400">عنوان موجز</label>
+                <input type="text" value={editingPrompt.title} onChange={(e) => setEditingPrompt({...editingPrompt, title: e.target.value})} placeholder="مثال: غابة سحرية" className="w-full bg-neutral-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50" />
               </div>
-              
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">النص (Prompt)</label>
-                <textarea
-                  value={editingPrompt.prompt}
-                  onChange={(e) => setEditingPrompt({...editingPrompt, prompt: e.target.value})}
-                  placeholder="أدخل الوصف باللغة الإنجليزية..."
-                  rows={5}
-                  className="w-full bg-black/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 resize-none"
-                  dir="ltr"
-                />
+                <label className="block text-xs font-medium text-neutral-400">النص الكامل (Prompt)</label>
+                <textarea value={editingPrompt.prompt} onChange={(e) => setEditingPrompt({...editingPrompt, prompt: e.target.value})} placeholder="أدخل النص التفصيلي باللغة الإنجليزية..." rows={5} className="w-full bg-neutral-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 resize-none custom-scrollbar" dir="ltr" />
               </div>
             </div>
-
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-800">
-              <button
-                onClick={() => setEditingPrompt(null)}
-                className="px-5 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-gray-800 font-medium transition-colors"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleSavePrompt}
-                disabled={!editingPrompt.title.trim() || !editingPrompt.prompt.trim()}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-400 text-white px-6 py-2.5 rounded-xl font-bold transition-colors"
-              >
-                <Save className="w-4 h-4" />
-                حفظ
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
+              <button onClick={() => setEditingPrompt(null)} className="px-5 py-2.5 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">إلغاء</button>
+              <button onClick={handleSavePrompt} disabled={!editingPrompt.title.trim() || !editingPrompt.prompt.trim()} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-colors">
+                <Save className="w-4 h-4" /> حفظ
               </button>
             </div>
           </div>
@@ -1798,139 +1024,389 @@ export default function ProjectWorkspace() {
 
       {/* Template Modal */}
       {isTemplateModalOpen && imageToTemplate && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" onClick={() => setIsTemplateModalOpen(false)}>
-          <div 
-            className="bg-gray-900 border border-indigo-500/30 rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-800 bg-black/20">
-              <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                <LayoutTemplate className="w-6 h-6 text-indigo-400" />
-                تنزيل بداخل القالب
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 backdrop-blur-md p-4" onClick={() => setIsTemplateModalOpen(false)}>
+          <div className="bg-[#111] border border-white/10 rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-white/5 bg-white/[0.02]">
+              <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400"><LayoutTemplate className="w-4 h-4" /></div>
+                دمج مع قالب
               </h3>
-              <button 
-                onClick={() => setIsTemplateModalOpen(false)}
-                className="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-full p-2 transition-colors"
-              >
-                <X className="w-5 h-5" />
+              <button onClick={() => setIsTemplateModalOpen(false)} className="text-neutral-500 hover:text-white bg-white/5 rounded-full p-2.5 transition-colors">
+                <X className="w-4 h-4" />
               </button>
             </div>
-            
-            {/* Content */}
             <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-              {/* Left/Top: Preview */}
-              <div className="flex-1 p-6 bg-black/50 overflow-auto flex items-center justify-center relative">
-                {!templateImage ? (
-                  <div className="text-center space-y-4">
-                    <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mx-auto border border-dashed border-gray-600">
-                      <Upload className="w-10 h-10 text-gray-400" />
-                    </div>
-                    <p className="text-gray-400">الرجاء رفع صورة القالب أولاً</p>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleTemplateUpload} 
-                      className="hidden" 
-                      id="template-upload" 
-                    />
-                    <label 
-                      htmlFor="template-upload" 
-                      className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-medium cursor-pointer transition-colors"
-                    >
-                      اختيار صورة القالب
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative shadow-2xl" style={{ maxWidth: '100%', maxHeight: '100%' }}>
-                    <canvas ref={templateCanvasRef} className="max-w-full max-h-[60vh] md:max-h-[70vh] object-contain" />
-                  </div>
-                )}
-              </div>
-
-              {/* Right/Bottom: Controls */}
-              {templateImage && (
-                <div className="w-full md:w-80 p-6 border-t md:border-t-0 md:border-r border-gray-800 bg-gray-900/50 overflow-y-auto space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Settings2 className="w-5 h-5 text-indigo-400" />
-                      إعدادات الموضع
-                    </h4>
-                    
-                    <div className="space-y-2">
-                      <label className="flex justify-between text-sm text-gray-300">
-                        <span>الحجم (Scale)</span>
-                        <span>{templateSettings.scale}%</span>
-                      </label>
-                      <input 
-                        type="range" 
-                        min="10" max="200" 
-                        value={templateSettings.scale} 
-                        onChange={(e) => setTemplateSettings({...templateSettings, scale: parseInt(e.target.value)})}
-                        className="w-full accent-indigo-500"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="flex justify-between text-sm text-gray-300">
-                        <span>الموضع الأفقي (X)</span>
-                        <span>{templateSettings.offsetX}%</span>
-                      </label>
-                      <input 
-                        type="range" 
-                        min="0" max="100" 
-                        value={templateSettings.offsetX} 
-                        onChange={(e) => setTemplateSettings({...templateSettings, offsetX: parseInt(e.target.value)})}
-                        className="w-full accent-indigo-500"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="flex justify-between text-sm text-gray-300">
-                        <span>الموضع الرأسي (Y)</span>
-                        <span>{templateSettings.offsetY}%</span>
-                      </label>
-                      <input 
-                        type="range" 
-                        min="0" max="100" 
-                        value={templateSettings.offsetY} 
-                        onChange={(e) => setTemplateSettings({...templateSettings, offsetY: parseInt(e.target.value)})}
-                        className="w-full accent-indigo-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-800 space-y-3">
-                    <button 
-                      onClick={handleDownloadTemplate}
-                      className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-bold transition-colors"
-                    >
-                      <Download className="w-5 h-5" />
-                      تنزيل الصورة النهائية
-                    </button>
-                    
-                    <div className="text-center">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleTemplateUpload} 
-                        className="hidden" 
-                        id="template-change" 
-                      />
-                      <label 
-                        htmlFor="template-change" 
-                        className="text-sm text-gray-400 hover:text-white cursor-pointer transition-colors"
-                      >
-                        تغيير القالب
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              )}
+               <div className="flex-1 p-6 bg-black overflow-auto flex items-center justify-center relative dot-pattern">
+                 {!templateImage ? (
+                   <div className="text-center space-y-4">
+                     <div className="w-20 h-20 bg-neutral-900 rounded-full flex items-center justify-center mx-auto border border-dashed border-neutral-700">
+                       <Upload className="w-8 h-8 text-neutral-500" />
+                     </div>
+                     <p className="text-sm text-neutral-400">الرجاء رفع صورة القالب (الموك آب)</p>
+                     <input type="file" accept="image/*" onChange={handleTemplateUpload} className="hidden" id="template-upload" />
+                     <label htmlFor="template-upload" className="inline-block bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-xl text-sm font-medium cursor-pointer transition-colors border border-white/10">اختيار صورة القالب</label>
+                   </div>
+                 ) : (
+                   <div className="relative shadow-2xl border border-white/10 rounded-xl overflow-hidden bg-neutral-900" style={{ maxWidth: '100%', maxHeight: '100%' }}>
+                     <canvas ref={templateCanvasRef} className="max-w-full max-h-[60vh] md:max-h-[70vh] object-contain" />
+                   </div>
+                 )}
+               </div>
+               {templateImage && (
+                 <div className="w-full md:w-80 p-6 border-t md:border-t-0 md:border-r border-white/5 bg-[#0a0a0a] overflow-y-auto space-y-8 custom-scrollbar">
+                   <div className="space-y-6">
+                     <h4 className="text-sm font-semibold text-neutral-300 flex items-center gap-2">
+                       <Settings2 className="w-4 h-4" /> إعدادات الدمج
+                     </h4>
+                     <div className="space-y-3">
+                       <label className="flex justify-between text-xs font-medium text-neutral-400"><span>مقياس الحجم (Scale)</span><span className="text-indigo-400">{templateSettings.scale}%</span></label>
+                       <input type="range" min="10" max="200" value={templateSettings.scale} onChange={(e) => setTemplateSettings({...templateSettings, scale: parseInt(e.target.value)})} className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+                     </div>
+                     <div className="space-y-3">
+                       <label className="flex justify-between text-xs font-medium text-neutral-400"><span>المحور الأفقي (X)</span><span className="text-indigo-400">{templateSettings.offsetX}%</span></label>
+                       <input type="range" min="0" max="100" value={templateSettings.offsetX} onChange={(e) => setTemplateSettings({...templateSettings, offsetX: parseInt(e.target.value)})} className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+                     </div>
+                     <div className="space-y-3">
+                       <label className="flex justify-between text-xs font-medium text-neutral-400"><span>المحور الرأسي (Y)</span><span className="text-indigo-400">{templateSettings.offsetY}%</span></label>
+                       <input type="range" min="0" max="100" value={templateSettings.offsetY} onChange={(e) => setTemplateSettings({...templateSettings, offsetY: parseInt(e.target.value)})} className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+                     </div>
+                   </div>
+                   <div className="pt-6 border-t border-white/5 space-y-3">
+                     <button onClick={handleDownloadTemplate} className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-indigo-500/20">
+                       <Download className="w-4 h-4" /> حفظ النتيجة
+                     </button>
+                     <div className="text-center">
+                       <input type="file" accept="image/*" onChange={handleTemplateUpload} className="hidden" id="template-change" />
+                       <label htmlFor="template-change" className="text-xs text-neutral-500 hover:text-white cursor-pointer transition-colors block py-2">تغيير صورة القالب</label>
+                     </div>
+                   </div>
+                 </div>
+               )}
             </div>
           </div>
         </div>
       )}
+
+      {/* --- Main App Layout --- */}
+
+      {/* Top Navbar */}
+      <header className="h-16 flex-none border-b border-white/5 bg-[#0a0a0a] flex items-center justify-between px-4 sm:px-6 z-20">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <button onClick={() => navigate('/')} className="text-neutral-500 hover:text-white hover:bg-white/5 p-2 rounded-lg transition-all" title="الرجوع للقائمة">
+            <ArrowLeft size={18} />
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex flex-col">
+              <h1 className="font-bold text-base sm:text-lg leading-tight text-white tracking-wide">Xreef <span className="text-blue-400">1.6</span></h1>
+            </div>
+          </div>
+          {projectName && (
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5 ml-4">
+              <Folder className="w-3.5 h-3.5 text-neutral-400" />
+              <span className="text-xs font-medium text-neutral-300">{projectName}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-4">
+          <button onClick={() => navigate('/support')} className="text-neutral-500 hover:text-white hover:bg-white/5 p-2 rounded-lg transition-all hidden sm:block" title="الدعم الفني">
+            <LifeBuoy size={18} />
+          </button>
+          
+          <div className="w-px h-6 bg-white/10 hidden sm:block"></div>
+
+          {user ? (
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 bg-neutral-900 border border-white/5 px-2 py-1 rounded-full pr-1">
+                <span className="text-xs font-medium text-neutral-300 pl-2">{user.displayName || 'مستخدم'}</span>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="المستخدم" className="w-6 h-6 rounded-full border border-white/10" />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                    <span className="text-xs text-blue-400">{user.displayName?.charAt(0) || 'U'}</span>
+                  </div>
+                )}
+              </div>
+              <button onClick={logOut} className="text-red-400/80 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors" title="تسجيل الخروج">
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => { setAuthError(null); setIsAuthModalOpen(true); }} className="flex items-center gap-2 bg-white hover:bg-neutral-200 text-black px-4 py-1.5 rounded-lg text-sm font-bold transition-all shadow-lg text-center">
+              <LogIn className="w-4 h-4 hidden sm:block" />
+              تسجيل دخول
+            </button>
+          )}
+        </div>
+      </header>
+
+      <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        
+        {/* Right Sidebar (Controls) */}
+        <aside className="w-full md:w-[380px] lg:w-[420px] flex-none border-l border-white/5 bg-[#0a0a0a] flex flex-col z-10 md:h-full order-2 md:order-1 relative">
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6 custom-scrollbar">
+            <form onSubmit={handleGenerate} className="space-y-8 pb-32 md:pb-0 relative h-full flex flex-col">
+              
+              {/* Prompt Section */}
+              <div className="space-y-3 shrink-0">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold text-neutral-200 flex items-center gap-2">
+                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                     وصف الصورة
+                  </label>
+                  <button type="button" onClick={() => setIsPromptBankOpen(true)} className="text-[11px] font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5">
+                    <Library className="w-3.5 h-3.5" /> الأوصاف الجاهزة
+                  </button>
+                </div>
+                
+                <div className="relative group">
+                  <textarea
+                    id="prompt"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    disabled={isLoading || isEnhancingPrompt}
+                    placeholder="ماذا تريد أن تبدع اليوم؟ (بالعربية أو الإنجليزية)..."
+                    className="w-full bg-[#141414] border border-white/10 text-white rounded-2xl p-4 min-h-[140px] resize-none focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all custom-scrollbar text-sm leading-relaxed"
+                  />
+                  <div className="absolute left-3 bottom-3 flex items-center gap-2">
+                    <button type="button" onClick={handleEnhancePrompt} disabled={!prompt.trim() || isEnhancingPrompt || isLoading} className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed group/magic" title="ترجمة وتحسين الوصف بواسطة Gemini 3.1">
+                      {isEnhancingPrompt ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4 group-hover/magic:scale-110 transition-transform" />}
+                    </button>
+                    {prompt.trim() && (
+                      <button type="button" onClick={() => setPrompt('')} className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 hover:bg-neutral-700 text-neutral-400 transition-all border border-white/5" title="مسح النص">
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {enhancedPromptResult && (
+                  <div className="p-4 bg-purple-900/10 border border-purple-500/20 rounded-2xl animate-in slide-in-from-top-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold text-purple-400 uppercase tracking-widest">Gemini 3.1 ✧</span>
+                      <button type="button" onClick={() => setEnhancedPromptResult(null)} className="text-neutral-500 hover:text-white transition-colors"><X className="w-3.5 h-3.5"/></button>
+                    </div>
+                    <p className="text-xs text-purple-200/80 leading-relaxed mb-3 font-mono" dir="ltr">{enhancedPromptResult}</p>
+                    <button type="button" onClick={() => { setPrompt(enhancedPromptResult); setEnhancedPromptResult(null); }} className="w-full py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-xl text-xs font-medium transition-colors border border-purple-500/20">
+                      استخدام هذا الوصف
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Reference Image Section */}
+              <div className="space-y-3 shrink-0">
+                <label className="text-sm font-bold text-neutral-200 flex items-center gap-2">
+                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                   صورة مرجعية <span className="text-neutral-600 font-normal text-xs">(اختياري)</span>
+                </label>
+                {imageFiles.length > 0 ? (
+                  <div className="relative group w-full aspect-video bg-[#141414] rounded-2xl border border-indigo-500/30 overflow-hidden flex items-center justify-center">
+                    <img src={imageFiles[0]} alt="معاينة" className="w-full h-full object-contain" />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button type="button" onClick={() => removeImage(0)} className="bg-red-500/90 text-white p-2.5 rounded-full hover:bg-red-500 hover:scale-110 active:scale-95 transition-all shadow-lg shadow-red-500/20">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center justify-center w-full min-h-[100px] border border-dashed border-white/10 hover:border-indigo-500/50 bg-[#141414] hover:bg-[#1a1a1a] rounded-2xl cursor-pointer transition-all group p-4">
+                    <Upload className="w-6 h-6 text-neutral-600 group-hover:text-indigo-400 transition-colors mb-2" />
+                    <span className="text-xs text-neutral-500 font-medium">سحب وإفلات أو اضغط لرفع صورة</span>
+                  </div>
+                )}
+                <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+              </div>
+
+              {/* Settings Section */}
+              <div className="grid grid-cols-2 gap-4 shrink-0">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">الأبعاد (Ratio)</label>
+                  <div className="relative">
+                    <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} className="w-full appearance-none bg-[#141414] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-colors">
+                      <option value="1:1">مربع 1:1</option>
+                      <option value="16:9">شاشة 16:9</option>
+                      <option value="9:16">طولي 9:16</option>
+                      <option value="4:3">أفقي 4:3</option>
+                      <option value="3:4">عمودي 3:4</option>
+                    </select>
+                    <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">الدقة (Res)</label>
+                  <div className="relative">
+                    <select value={resolution} onChange={(e) => setResolution(e.target.value)} className="w-full appearance-none bg-[#141414] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-colors">
+                      <option value="1K">سريع 1K</option>
+                      <option value="2K">عالي 2K</option>
+                      <option value="4K">فائق 4K</option>
+                    </select>
+                    <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Error Box inside scroll area */}
+              {error && (
+                <div className="p-4 bg-red-900/10 border border-red-500/20 rounded-xl flex items-start gap-3 mt-4 shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center shrink-0 border border-red-500/20"><X className="w-4 h-4 text-red-500" /></div>
+                  <p className="text-xs text-red-400 leading-relaxed pt-1">{error}</p>
+                </div>
+              )}
+
+              {/* Spacer so generate button doesn't cover content on mobile */}
+              <div className="h-4 md:hidden shrink-0"></div>
+
+              {/* Generate Button Wrapper - Sticky on mobile, normal flex on desktop */}
+              <div className="absolute md:relative bottom-0 left-0 right-0 p-5 md:p-0 bg-[#0a0a0a] md:bg-transparent border-t border-white/5 md:border-none z-20 mt-auto pt-6">
+                <button
+                  type="submit"
+                  disabled={isLoading || !prompt.trim()}
+                  className={`w-full relative overflow-hidden flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isLoading 
+                      ? 'bg-neutral-800 text-neutral-400 border border-white/5' 
+                      : 'bg-white text-black hover:bg-neutral-200 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.5)] active:scale-[0.98]'
+                  }`}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>قيد التنفيذ...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      <span>توليد إبداع جديد</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </aside>
+
+        {/* Left Area (Canvas) */}
+        <section className="flex-1 flex flex-col relative bg-[#111] overflow-hidden order-1 md:order-2">
+           {/* Subtle Grid Background */}
+           <div className="absolute inset-0 bg-dot-pattern opacity-50 z-0 mix-blend-overlay"></div>
+           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(10,10,10,1)_90%)] z-0 pointer-events-none"></div>
+
+           {/* Canvas Area */}
+           <div className="flex-1 overflow-x-hidden overflow-y-auto custom-scrollbar p-6 lg:p-10 relative z-10 flex flex-col">
+              
+              {isLoading ? (
+                <div className="m-auto flex flex-col items-center justify-center p-8 max-w-sm w-full">
+                  <div className="relative w-32 h-32 mb-8">
+                     {/* Cybernetic loading ring */}
+                     <div className="absolute inset-0 rounded-full border-t-2 border-l-2 border-blue-500 animate-[spin_2s_linear_infinite]"></div>
+                     <div className="absolute inset-2 rounded-full border-b-2 border-r-2 border-purple-500 animate-[spin_1.5s_linear_infinite_reverse]"></div>
+                     <div className="absolute inset-4 rounded-full border-2 border-dashed border-white/20 animate-[spin_3s_linear_infinite]"></div>
+                     <div className="absolute inset-0 flex items-center justify-center">
+                       <Sparkles className="w-8 h-8 text-white animate-pulse" />
+                     </div>
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-4 text-center tracking-wide">{loadingText}</h3>
+                  <div className="w-full h-1 bg-neutral-900 rounded-full overflow-hidden border border-white/5">
+                    <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ease-out relative" style={{ width: `${progress}%` }}>
+                       <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.3)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px] animate-[shimmer_1s_linear_infinite]"></div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between w-full mt-2">
+                     <span className="text-[10px] text-neutral-500 font-mono">0xNANO_BANANA</span>
+                     <span className="text-[10px] text-neutral-400 font-mono font-bold">{progress}%</span>
+                  </div>
+                </div>
+              ) : imageUrls.length > 0 ? (
+                <div className={`m-auto w-full grid gap-6 md:gap-8 max-w-6xl ${
+                  imageUrls.length === 1 ? 'grid-cols-1 max-w-3xl' : 
+                  imageUrls.length === 2 ? 'grid-cols-1 xl:grid-cols-2' : 
+                  'grid-cols-1 md:grid-cols-2 xl:grid-cols-2'
+                }`}>
+                  {imageUrls.map((url, i) => (
+                    <motion.div 
+                      key={i} 
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: i * 0.1 }}
+                      className="group relative bg-[#1a1a1a] border border-white/10 rounded-3xl overflow-hidden shadow-2xl hover:border-blue-500/50 transition-all flex items-center justify-center min-h-[200px]"
+                    >
+                       <img src={url} alt={`نتيجة ${i+1}`} className="w-full h-auto max-h-[60vh] object-contain group-hover:scale-[1.02] transition-transform duration-700" referrerPolicy="no-referrer" />
+                       
+                       <div className="absolute inset-0 flex flex-col justify-between opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/90 via-black/20 to-black/40">
+                         {/* Top Actions */}
+                         <div className="flex justify-between items-start p-4">
+                            <span className="bg-black/50 text-white/70 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold font-mono tracking-widest border border-white/10">RES {i+1}</span>
+                            <div className="flex gap-2">
+                               <button onClick={() => setSelectedImage(url)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors border border-white/10"><Maximize2 className="w-3.5 h-3.5" /></button>
+                               <button onClick={() => openCropModal(url)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors border border-white/10"><Crop className="w-3.5 h-3.5" /></button>
+                            </div>
+                         </div>
+                         
+                         {/* Bottom Actions */}
+                         <div className="p-4 sm:p-5 flex flex-wrap gap-2 justify-center pb-6 sm:pb-5">
+                            <button onClick={() => handleUseAsInput(url)} className="flex items-center gap-2 bg-blue-600/90 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-transform active:scale-95 shadow-lg border border-blue-400/30 backdrop-blur-sm">
+                              <ImagePlus className="w-3.5 h-3.5" /> مرجع
+                            </button>
+                            <button onClick={() => handleUpscale(url)} disabled={isUpscaling === url} className="flex items-center gap-2 bg-purple-600/90 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-transform active:scale-95 shadow-lg border border-purple-400/30 backdrop-blur-sm disabled:opacity-50">
+                              {isUpscaling === url ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />} تكبير
+                            </button>
+                            <button onClick={() => openTemplateModal(url)} className="flex items-center justify-center w-10 h-10 bg-indigo-600/90 hover:bg-indigo-500 text-white rounded-xl transition-transform active:scale-95 shadow-lg border border-indigo-400/30 backdrop-blur-sm" title="وضع في قالب">
+                              <LayoutTemplate className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => handleDownload(url)} className="flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-transform active:scale-95 shadow-lg border border-white/10 backdrop-blur-sm" title="تنزيل">
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
+                         </div>
+                       </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="m-auto flex flex-col items-center justify-center text-center opacity-30 max-w-sm">
+                   <div className="w-32 h-32 rounded-full border border-dashed border-white/20 flex items-center justify-center mb-6 bg-white/5">
+                     <ImageIcon className="w-10 h-10 text-neutral-400" />
+                   </div>
+                   <p className="text-xl font-bold text-white mb-2 tracking-tight">لوحة الإبداع فارغة</p>
+                   <p className="text-sm text-neutral-400 leading-relaxed">أدخل وصفك في القائمة الجانبية واضغط على "توليد إبداع جديد" لتطبع خيالك هنا.</p>
+                </div>
+              )}
+           </div>
+
+           {/* History Strip */}
+           {history.length > 0 && (
+             <div className="shrink-0 bg-[#0a0a0a] border-t border-white/5 z-20 flex flex-col">
+                <div className="flex items-center justify-between px-6 py-2 border-b border-white/5 shrink-0">
+                   <h3 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+                     <Clock className="w-3 h-3" /> سجل التوليد
+                   </h3>
+                   <button onClick={async () => {
+                     if (user) {
+                       try { for (const item of history) { await deleteDoc(doc(db, `users/${user.uid}/projects/${projectId}/history`, item.id)); } } 
+                       catch (err) { handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/projects/${projectId}/history`); }
+                     } else { setHistory([]); localStorage.removeItem(`xreef_history_${projectId}`); }
+                   }} className="text-[10px] text-red-500 hover:text-red-400 font-medium px-2 py-1 bg-red-500/10 rounded-md transition-colors">
+                     مسح السجل
+                   </button>
+                </div>
+                <div className="flex-none px-6 py-3 overflow-x-auto overflow-y-hidden flex flex-nowrap gap-4 custom-scrollbar pb-4">
+                   {history.map((item) => (
+                     <div key={item.id} className="relative group shrink-0 w-[124px] h-[70px] sm:w-[160px] sm:h-[90px] rounded-xl overflow-hidden border border-white/10 hover:border-blue-500/50 transition-all cursor-pointer shadow-lg bg-[#141414] flex items-center justify-center" onClick={() => setSelectedImage(item.url)}>
+                       <img src={item.url} alt="" className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-500 opacity-80 group-hover:opacity-100" referrerPolicy="no-referrer" loading="lazy" />
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                         <p className="text-[8px] text-white/90 line-clamp-2 leading-tight" dir="rtl">{item.prompt}</p>
+                       </div>
+                     </div>
+                   ))}
+                </div>
+             </div>
+           )}
+        </section>
+
+      </main>
     </div>
   );
 }
