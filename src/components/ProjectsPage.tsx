@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, signInWithGoogle, signInWithEmail, signUpWithEmail, logOut, handleFirestoreError, OperationType } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, doc, setDoc, onSnapshot, query, orderBy, deleteDoc } from 'firebase/firestore';
+import Scene3D from './Scene3D';
 
 interface Project {
   id: string;
@@ -116,7 +117,13 @@ export default function ProjectsPage() {
     return (
       <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30 flex items-center justify-center p-4 relative" dir="rtl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.15)_0%,transparent_100%)]"></div>
-        <div className="bg-gray-900/80 backdrop-blur-xl border border-blue-500/30 p-8 rounded-3xl shadow-2xl max-w-md w-full relative z-10">
+        
+        {/* Background 3D Scene for Login */}
+        <div className="absolute inset-0 z-0 opacity-40 overflow-hidden">
+           <Scene3D className="h-full" showBorder={false} />
+        </div>
+
+        <div className="bg-gray-900/80 backdrop-blur-xl border border-blue-500/30 p-8 rounded-3xl shadow-2xl max-w-md w-full relative z-10 mx-auto">
           <div className="flex justify-center mb-6">
             <Sparkles className="w-12 h-12 text-blue-500" />
           </div>
@@ -161,7 +168,7 @@ export default function ProjectsPage() {
         <div className="flex justify-between items-center mb-12">
           <div>
             <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
-              مشاريع Xreef 1.6
+              مشاريع Xreef 1.7
             </h1>
             <p className="text-gray-400 mt-2">إدارة مشاريع توليد الصور بالذكاء الاصطناعي</p>
           </div>
@@ -187,6 +194,8 @@ export default function ProjectsPage() {
             </button>
           </div>
         </div>
+
+        <Scene3D />
 
         {projects.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-gray-800 rounded-3xl bg-gray-900/20">

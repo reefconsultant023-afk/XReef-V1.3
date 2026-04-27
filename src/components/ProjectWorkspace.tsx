@@ -7,6 +7,7 @@ import { auth, db, signInWithGoogle, signInWithEmail, signUpWithEmail, logOut, h
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, doc, setDoc, onSnapshot, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
+import Scene3D from './Scene3D';
 
 interface HistoryItem {
   id: string;
@@ -827,9 +828,7 @@ export default function ProjectWorkspace() {
               <X className="w-5 h-5" />
             </button>
             <div className="flex justify-center mb-6 mt-2">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Sparkles className="w-8 h-8 text-white" />
-              </div>
+              <Scene3D className="h-[200px]" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2 text-center tracking-tight">مرحباً بك في Xreef</h2>
             <p className="text-neutral-400 text-center mb-8 text-sm">قم بتسجيل الدخول لحفظ مشاريعك وسجل توليدك</p>
@@ -1100,7 +1099,7 @@ export default function ProjectWorkspace() {
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div className="flex flex-col">
-              <h1 className="font-bold text-base sm:text-lg leading-tight text-white tracking-wide">Xreef <span className="text-blue-400">1.6</span></h1>
+              <h1 className="font-bold text-base sm:text-lg leading-tight text-white tracking-wide">Xreef <span className="text-blue-400">1.7</span></h1>
             </div>
           </div>
           {projectName && (
