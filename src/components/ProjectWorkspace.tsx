@@ -1168,7 +1168,7 @@ export default function ProjectWorkspace() {
                     onChange={(e) => setPrompt(e.target.value)}
                     disabled={isLoading || isEnhancingPrompt}
                     placeholder="ماذا تريد أن تبدع اليوم؟ (بالعربية أو الإنجليزية)..."
-                    className="w-full bg-[#141414] border border-white/10 text-white rounded-2xl p-4 min-h-[140px] resize-none focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all custom-scrollbar text-sm leading-relaxed"
+                    className="w-full bg-[#141414] border border-white/10 text-white rounded-2xl p-4 min-h-[600px] resize-none focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all custom-scrollbar text-sm leading-relaxed font-cairo"
                   />
                   <div className="absolute left-3 bottom-3 flex items-center gap-2">
                     <button type="button" onClick={handleEnhancePrompt} disabled={!prompt.trim() || isEnhancingPrompt || isLoading} className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed group/magic" title="ترجمة وتحسين الوصف بواسطة Gemini 3.1">
