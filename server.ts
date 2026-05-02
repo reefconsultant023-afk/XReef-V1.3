@@ -61,11 +61,12 @@ async function startServer() {
       }
 
       // Run in parallel to maximize speed
+      const replicateModel = req.body.model === "google/nano-banana-2" ? "google/nano-banana-2" : "google/nano-banana-pro";
       const promises = Array.from({ length: 1 }).map(async () => {
         try {
-          return await replicate.run("google/nano-banana-pro", { input });
+          return await replicate.run(replicateModel, { input });
         } catch (err: any) {
-          console.error(`Error with google/nano-banana-pro:`, err);
+          console.error(`Error with ${replicateModel}:`, err);
           throw err;
         }
       });
@@ -131,11 +132,14 @@ async function startServer() {
 
       const input = {
         image,
-        scale: Number(scale),
-        face_enhance: Boolean(faceEnhance)
+        upscale_mode: "factor",
+        factor: Number(scale) > 8 ? 8 : (Number(scale) || 4),
+        enhance_details: Boolean(faceEnhance),
+        enhance_realism: true,
+        output_format: "png"
       };
 
-      const output: any = await replicate.run("nightmareai/real-esrgan", { input });
+      const output: any = await replicate.run("prunaai/p-image-upscale", { input });
       
       let imageUrl = output;
       if (output && typeof output.url === 'function') {

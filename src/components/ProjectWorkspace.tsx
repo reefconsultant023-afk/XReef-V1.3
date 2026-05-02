@@ -124,6 +124,11 @@ export default function ProjectWorkspace() {
   const [imageToTemplate, setImageToTemplate] = useState<string | null>(null);
   const templateCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  const [sidebarMode, setSidebarMode] = useState<'generate' | 'generate_nano_2' | 'upscale'>('generate');
+  const [upscaleSourceImage, setUpscaleSourceImage] = useState<string | null>(null);
+  const [isUpscalingLocal, setIsUpscalingLocal] = useState(false);
+  const upscaleFileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -573,7 +578,7 @@ export default function ProjectWorkspace() {
           images: imageFiles,
           aspectRatio,
           resolution,
-          model: "google/nano-banana-pro"
+          model: sidebarMode === "generate_nano_2" ? "google/nano-banana-2" : "google/nano-banana-pro"
         }),
       });
 
@@ -711,6 +716,57 @@ export default function ProjectWorkspace() {
       alert(err.message || "حدث خطأ أثناء تكبير الصورة");
     } finally {
       setIsUpscaling(null);
+    }
+  };
+
+  const handleLocalUpscaleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      try {
+        const compressedBase64 = await compressImage(files[0]);
+        setUpscaleSourceImage(compressedBase64);
+      } catch (err) {
+        console.error("Error compressing image:", err);
+      }
+    }
+  };
+
+  const handleLocalUpscale = async () => {
+    if (!upscaleSourceImage) return;
+    setIsUpscalingLocal(true);
+    try {
+      const response = await fetch("/api/upscale", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          image: upscaleSourceImage,
+          scale: 4,
+          faceEnhance: false
+        }),
+      });
+
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        throw new Error("استجابة غير صالحة من الخادم");
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || "حدث خطأ أثناء تكبير الصورة");
+      }
+      
+      if (data.output) {
+        setUpscaleSourceImage(data.output);
+      }
+    } catch (err: any) {
+      console.error("Error upscaling local:", err);
+      alert(err.message || "حدث خطأ أثناء تكبير الصورة");
+    } finally {
+      setIsUpscalingLocal(false);
     }
   };
 
@@ -1146,10 +1202,37 @@ export default function ProjectWorkspace() {
         
         {/* Right Sidebar (Controls) */}
         <aside className="w-full md:w-[380px] lg:w-[420px] flex-none border-l border-white/5 bg-[#0a0a0a] flex flex-col z-10 md:h-full order-2 md:order-1 relative">
+          
+          {/* Tabs */}
+          <div className="flex items-center border-b border-white/5 shrink-0 overflow-x-auto custom-scrollbar">
+            <button 
+              onClick={() => setSidebarMode('generate')}
+              className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors whitespace-nowrap px-2 ${sidebarMode === 'generate' ? 'text-white border-b-2 border-blue-500 bg-white/5' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}
+            >
+              <Sparkles className="w-4 h-4" />
+              Pro
+            </button>
+            <button 
+              onClick={() => setSidebarMode('generate_nano_2')}
+              className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors whitespace-nowrap px-2 ${sidebarMode === 'generate_nano_2' ? 'text-white border-b-2 border-green-500 bg-white/5' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}
+            >
+              <Sparkles className="w-4 h-4 text-green-500" />
+              Banana 2
+            </button>
+            <button 
+              onClick={() => setSidebarMode('upscale')}
+              className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors whitespace-nowrap px-2 ${sidebarMode === 'upscale' ? 'text-white border-b-2 border-purple-500 bg-white/5' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}
+            >
+              <Zap className="w-4 h-4" />
+              تكبير
+            </button>
+          </div>
+
           <div className="flex-1 overflow-y-auto p-5 sm:p-6 custom-scrollbar">
-            <form onSubmit={handleGenerate} className="space-y-8 pb-32 md:pb-0 relative h-full flex flex-col">
-              
-              {/* Prompt Section */}
+            {sidebarMode === 'generate' || sidebarMode === 'generate_nano_2' ? (
+              <form onSubmit={handleGenerate} className="space-y-8 pb-32 md:pb-0 relative h-full flex flex-col">
+                
+                {/* Prompt Section */}
               <div className="space-y-3 shrink-0">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-bold text-neutral-200 flex items-center gap-2">
@@ -1278,13 +1361,81 @@ export default function ProjectWorkspace() {
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      <span>توليد إبداع جديد</span>
+                      <span>{sidebarMode === 'generate_nano_2' ? 'توليد باستخدام Banana 2' : 'توليد إبداع جديد'}</span>
                     </>
                   )}
                 </button>
               </div>
-
             </form>
+            ) : (
+               <div className="space-y-8 pb-32 md:pb-0 relative h-full flex flex-col">
+                  {/* Upscale UI */}
+                  <div className="space-y-3 shrink-0">
+                    <label className="text-sm font-bold text-neutral-200 flex items-center gap-2">
+                       <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                       تخطي حدود الدقة مع <span className="font-mono text-purple-400">P-Image-Upscale</span>
+                    </label>
+                    <p className="text-xs text-neutral-400 leading-relaxed mb-4">
+                      ارفع أي صورة لزيادة دقتها وتفاصيلها بشكل ملحوظ باستخدام الذكاء الاصطناعي.
+                    </p>
+                    {upscaleSourceImage ? (
+                      <div className="relative group w-full aspect-square bg-[#141414] rounded-2xl border border-purple-500/30 overflow-hidden flex items-center justify-center">
+                        <img src={upscaleSourceImage} alt="معاينة" className="w-full h-full object-contain" />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button type="button" onClick={() => setUpscaleSourceImage(null)} className="bg-red-500/90 text-white p-2.5 rounded-full hover:bg-red-500 hover:scale-110 active:scale-95 transition-all shadow-lg shadow-red-500/20">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div onClick={() => upscaleFileInputRef.current?.click()} className="flex flex-col items-center justify-center w-full min-h-[300px] border border-dashed border-white/10 hover:border-purple-500/50 bg-[#141414] hover:bg-[#1a1a1a] rounded-2xl cursor-pointer transition-all group p-4">
+                        <Upload className="w-8 h-8 text-neutral-600 group-hover:text-purple-400 transition-colors mb-4" />
+                        <span className="text-sm text-neutral-400 font-medium text-center">سحب وإفلات أو اضغط لرفع صورتك<br/><span className="text-xs text-neutral-600 mt-2 block">يدعم JPG, PNG, WEBP</span></span>
+                      </div>
+                    )}
+                    <input type="file" ref={upscaleFileInputRef} onChange={handleLocalUpscaleImageUpload} accept="image/*" className="hidden" />
+                  </div>
+
+                  <div className="absolute md:relative bottom-0 left-0 right-0 p-5 md:p-0 bg-[#0a0a0a] md:bg-transparent border-t border-white/5 md:border-none z-20 mt-auto pt-6">
+                    <button
+                      type="button"
+                      onClick={handleLocalUpscale}
+                      disabled={isUpscalingLocal || !upscaleSourceImage}
+                      className={`w-full relative overflow-hidden flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                        isUpscalingLocal 
+                          ? 'bg-neutral-800 text-neutral-400 border border-white/5' 
+                          : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:opacity-90 shadow-[0_0_40px_-10px_rgba(168,85,247,0.4)] hover:shadow-[0_0_60px_-15px_rgba(168,85,247,0.6)] active:scale-[0.98]'
+                      }`}
+                    >
+                      {isUpscalingLocal ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>جاري التكبير...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-5 h-5" />
+                          <span>تكبير الدقة وتحسين التفاصيل</span>
+                        </>
+                      )}
+                    </button>
+                    {upscaleSourceImage && !isUpscalingLocal && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const a = document.createElement('a');
+                            a.href = upscaleSourceImage;
+                            a.download = 'upscaled.jpg';
+                            a.click();
+                          }}
+                          className="mt-4 w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-sm transition-all border border-white/10 bg-[#141414] hover:bg-neutral-800 text-white"
+                        >
+                           <Download className="w-4 h-4" /> تحميل النسخة النهائية
+                        </button>
+                    )}
+                  </div>
+               </div>
+            )}
           </div>
         </aside>
 
